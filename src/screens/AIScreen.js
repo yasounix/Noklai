@@ -1,3 +1,5 @@
+
+import { askGemini } from '../services/geminiService';
 import React, { useState } from 'react';
 import {
   View,
@@ -26,29 +28,40 @@ export default function AIScreen() {
 
   const [input, setInput] = useState('');
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+  const sendMessage = async () => {
+  if (!input.trim()) return;
 
-    const userMessage = {
-      id: Date.now().toString(),
-      sender: 'user',
-      text: input.trim(),
+  const userText = input.trim();
+
+  const userMessage = {
+    id: Date.now().toString(),
+    sender: 'user',
+    text: userText,
+  };
+
+  setMessages(prev => [...prev, userMessage]);
+  setInput('');
+
+  try {
+    const aiResponse = await askGemini(userText);
+
+    const aiMessage = {
+      id: (Date.now() + 1).toString(),
+      sender: 'ai',
+      text: aiResponse,
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setMessages(prev => [...prev, aiMessage]);
+  } catch (error) {
+    const aiMessage = {
+      id: (Date.now() + 1).toString(),
+      sender: 'ai',
+      text: 'Sorry, I could not connect to the AI right now.',
+    };
 
-    // Temporary AI response
-    setTimeout(() => {
-      const aiMessage = {
-        id: (Date.now() + 1).toString(),
-        sender: 'ai',
-        text: 'Thank you for your message. I am still learning!',
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
-    }, 700);
-  };
+    setMessages(prev => [...prev, aiMessage]);
+  }
+};
 
   const renderMessage = ({ item }) => {
     const isUser = item.sender === 'user';
