@@ -1,5 +1,4 @@
 import React from 'react';
-import { useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../../theme/noklaiTheme';
@@ -17,10 +15,6 @@ import { StatSummaryRow } from '../../components/StatTile';
 import NoklaiButton from '../../components/NoklaiButton';
 import NoklaiCard from '../../components/NoklaiCard';
 import AIButton from '../../components/AIButton';
-import CaregiverContactButton from '../../components/CaregiverContactButton';
-import { callPhone } from '../../../utils/callService';
-
-const DOCTOR_STORAGE_PREFIX = '@caregiver_doctor_';
 
 export default function CaregiverHomeScreen({ onNavigateToProgress, onNavigateToAI, onNavigateToLinked }) {
   const { isDarkMode } = useTheme();
@@ -34,25 +28,7 @@ export default function CaregiverHomeScreen({ onNavigateToProgress, onNavigateTo
     computedStats,
     realRecentActivity,
     analyticsData,
-    activePatientId,
   } = useNoklai();
-  const [doctor, setDoctor] = useState(null);
-
-  React.useEffect(() => {
-    let isMounted = true;
-    AsyncStorage.getItem(`${DOCTOR_STORAGE_PREFIX}${activePatientId || 'default'}`)
-      .then((storedDoctor) => {
-        if (!isMounted || !storedDoctor) return;
-        try {
-          const parsedDoctor = JSON.parse(storedDoctor);
-          if (parsedDoctor?.name && parsedDoctor?.phone) setDoctor(parsedDoctor);
-        } catch (error) {
-          setDoctor(null);
-        }
-      })
-      .catch((error) => console.warn('Error loading doctor contact:', error));
-    return () => { isMounted = false; };
-  }, [activePatientId]);
 
   const handleViewProgress = () => {
     if (onNavigateToProgress) {
@@ -67,6 +43,14 @@ export default function CaregiverHomeScreen({ onNavigateToProgress, onNavigateTo
       onNavigateToAI();
     } else {
       setAiModalVisible(true);
+    }
+  };
+
+  const handleOpenLinked = () => {
+    if (onNavigateToLinked) {
+      onNavigateToLinked();
+    } else {
+      setActiveCaregiverSubScreen('linked');
     }
   };
 
@@ -86,7 +70,7 @@ export default function CaregiverHomeScreen({ onNavigateToProgress, onNavigateTo
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header greeting */}
         <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
+          <View>
             <Text
               style={[
                 styles.greetingText,
@@ -105,17 +89,16 @@ export default function CaregiverHomeScreen({ onNavigateToProgress, onNavigateTo
             </Text>
           </View>
 
-          <View style={styles.headerActions}>
-            <AIButton
-              variant="header"
-              onPress={handleOpenAI}
-            />
-            <CaregiverContactButton
-              doctor={doctor}
-              onAddDoctor={handleViewProgress}
-              onCallDoctor={() => callPhone(doctor.phone)}
-            />
-          </View>
+          <TouchableOpacity
+            onPress={handleOpenLinked}
+            style={styles.profileAvatarButton}
+            accessibilityLabel="View linked loved ones"
+          >
+            <View style={styles.profileAvatarCircle}>
+              <Text style={{ fontSize: 22 }}>{caregiverAvatar}</Text>
+            </View>
+            <View style={styles.profileBadgeDot} />
+          </TouchableOpacity>
         </View>
 
         {/* Active Patient Card */}
@@ -411,10 +394,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 20,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   greetingText: {
     fontSize: 26,

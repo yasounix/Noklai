@@ -7,23 +7,20 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../theme/noklaiTheme';
 import { useTheme } from '../../context/ThemeContext';
-import { useLanguage } from '../../context/LanguageContext';
 import { useNoklai } from '../context/NoklaiContext';
 import NoklaiButton from '../components/NoklaiButton';
 import NoklaiCard from '../components/NoklaiCard';
-import LanguageSelector from '../../components/LanguageSelector';
 import { validateLoginRequirements } from '../../utils/phoneValidation';
-import AuthModal from '../components/AuthModal';
 
 export default function NoklaiLoginScreen() {
   const { isDarkMode } = useTheme();
-  const { t } = useLanguage();
   const {
     caregiverName: initialCaregiverName,
     caregiverPhone: initialCaregiverPhone,
@@ -42,7 +39,6 @@ export default function NoklaiLoginScreen() {
   const [patientPhone, setPatientPhone] = useState(initialPatientPhone || '');
   const [patientGender, setPatientGender] = useState(initialPatientGender || 'female');
   const [errorMessage, setErrorMessage] = useState('');
-  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleContinue = async () => {
     const validation = validateLoginRequirements({
@@ -92,9 +88,6 @@ export default function NoklaiLoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Brand Header */}
-          <View style={{ width: '100%', alignItems: 'flex-end', marginBottom: 6 }}>
-            <LanguageSelector compact />
-          </View>
           <View style={styles.brandHeader}>
             <View style={styles.logoBadge}>
               <Ionicons name="leaf" size={26} color="#16A34A" />
@@ -105,7 +98,7 @@ export default function NoklaiLoginScreen() {
                 { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
               ]}
             >
-              {t('noklai.login.welcome', 'Welcome to Noklai')}
+              Welcome to Noklai
             </Text>
             <Text
               style={[
@@ -113,32 +106,8 @@ export default function NoklaiLoginScreen() {
                 { color: isDarkMode ? noklaiTheme.colors.textSecondaryDark : noklaiTheme.colors.textSecondary },
               ]}
             >
-              {t('noklai.login.subtitle', 'Enter caregiver and patient details to personalize your memory care experience.')}
+              Enter caregiver and patient details to personalize your memory care experience.
             </Text>
-          </View>
-
-          {/* Real Supabase Auth Trigger */}
-          <TouchableOpacity
-            style={styles.supabaseAuthBtn}
-            onPress={() => setShowAuthModal(true)}
-            activeOpacity={0.85}
-          >
-            <View style={styles.authBtnIconWrap}>
-              <Ionicons name="lock-closed" size={18} color="#5B409E" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.supabaseAuthBtnTitle}>Sign In / Register with Email</Text>
-              <Text style={styles.supabaseAuthBtnSub}>Sync patient memory photos & caregiver link</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#5B409E" />
-          </TouchableOpacity>
-
-          <View style={styles.dividerRow}>
-            <View style={[styles.dividerLine, { backgroundColor: isDarkMode ? '#374151' : '#E2E8F0' }]} />
-            <Text style={[styles.dividerText, { color: isDarkMode ? '#9CA3AF' : '#64748B' }]}>
-              OR CONTINUE LOCAL DEMO
-            </Text>
-            <View style={[styles.dividerLine, { backgroundColor: isDarkMode ? '#374151' : '#E2E8F0' }]} />
           </View>
 
           {errorMessage ? (
@@ -161,14 +130,14 @@ export default function NoklaiLoginScreen() {
                     { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
                   ]}
                 >
-                  {t('noklai.login.caregiverSection', 'Caregiver Details')}
+                  Caregiver Details
                 </Text>
-                <Text style={styles.sectionSub}>{t('noklai.login.caregiverSub', 'Person providing support and monitoring')}</Text>
+                <Text style={styles.sectionSub}>Person providing support and monitoring</Text>
               </View>
             </View>
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              {t('noklai.login.caregiverName', 'Caregiver Name *')}
+              Caregiver Name *
             </Text>
             <TextInput
               placeholder="e.g. Sara Sharma"
@@ -189,7 +158,7 @@ export default function NoklaiLoginScreen() {
             />
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              {t('noklai.login.caregiverPhone', 'Caregiver Mobile Number')}
+              Caregiver Mobile Number
             </Text>
             <TextInput
               placeholder="e.g. +91 98765 43210"
@@ -208,7 +177,7 @@ export default function NoklaiLoginScreen() {
             />
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              {t('noklai.login.caregiverPicture', 'Caregiver Profile Picture')}
+              Caregiver Profile Picture
             </Text>
             <View style={styles.genderRow}>
               <TouchableOpacity
@@ -238,7 +207,7 @@ export default function NoklaiLoginScreen() {
                     },
                   ]}
                 >
-                  {t('noklai.login.male', 'Male')}
+                  Male
                 </Text>
               </TouchableOpacity>
 
@@ -269,7 +238,7 @@ export default function NoklaiLoginScreen() {
                     },
                   ]}
                 >
-                  {t('noklai.login.female', 'Female')}
+                  Female
                 </Text>
               </TouchableOpacity>
             </View>
@@ -288,14 +257,14 @@ export default function NoklaiLoginScreen() {
                     { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
                   ]}
                 >
-                  {t('noklai.login.patientSection', 'Patient Details')}
+                  Patient Details
                 </Text>
-                <Text style={styles.sectionSub}>{t('noklai.login.patientSub', 'Elder loved one playing memory games')}</Text>
+                <Text style={styles.sectionSub}>Elder loved one playing memory games</Text>
               </View>
             </View>
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              {t('noklai.login.patientName', 'Patient Name *')}
+              Patient Name *
             </Text>
             <TextInput
               placeholder="e.g. Ramesh Kumar or Aaji"
@@ -316,7 +285,7 @@ export default function NoklaiLoginScreen() {
             />
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              {t('noklai.login.patientPhone', 'Patient Mobile Number')}
+              Patient Mobile Number
             </Text>
             <TextInput
               placeholder="e.g. +91 98765 43211"
@@ -335,7 +304,7 @@ export default function NoklaiLoginScreen() {
             />
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              {t('noklai.login.patientPicture', 'Patient Profile Picture')}
+              Patient Profile Picture
             </Text>
             <View style={styles.genderRow}>
               <TouchableOpacity
@@ -365,7 +334,7 @@ export default function NoklaiLoginScreen() {
                     },
                   ]}
                 >
-                  {t('noklai.login.maleGrandfather', 'Male (Grandfather)')}
+                  Male (Grandfather)
                 </Text>
               </TouchableOpacity>
 
@@ -396,7 +365,7 @@ export default function NoklaiLoginScreen() {
                     },
                   ]}
                 >
-                  {t('noklai.login.femaleGrandmother', 'Female (Grandmother)')}
+                  Female (Grandmother)
                 </Text>
               </TouchableOpacity>
             </View>
@@ -405,7 +374,7 @@ export default function NoklaiLoginScreen() {
           {/* Submit Action */}
           <View style={styles.actionContainer}>
             <NoklaiButton
-              title={t('noklai.login.saveAndContinue', 'Save & Continue')}
+              title="Save & Continue"
               variant="primary"
               size="lg"
               iconRight="arrow-forward"
@@ -414,14 +383,6 @@ export default function NoklaiLoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <AuthModal
-        visible={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={() => {
-          setCurrentStep('role_select');
-        }}
-      />
     </SafeAreaView>
   );
 }
@@ -537,51 +498,6 @@ const styles = StyleSheet.create({
   },
   genderText: {
     fontSize: 13,
-  },
-  supabaseAuthBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FAF5FF',
-    borderWidth: 1.5,
-    borderColor: '#D8B4FE',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 16,
-    gap: 12,
-  },
-  authBtnIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#EDE9FE',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  supabaseAuthBtnTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#5B409E',
-  },
-  supabaseAuthBtnSub: {
-    fontSize: 11,
-    color: '#7E22CE',
-    marginTop: 1,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 16,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-  },
-  dividerText: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
   },
 });
 

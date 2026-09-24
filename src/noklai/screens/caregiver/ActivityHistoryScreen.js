@@ -9,14 +9,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../../theme/noklaiTheme';
 import { useTheme } from '../../../context/ThemeContext';
-import { useLanguage } from '../../../context/LanguageContext';
 import { useNoklai } from '../../context/NoklaiContext';
 import NoklaiHeader from '../../components/NoklaiHeader';
 import NoklaiCard from '../../components/NoklaiCard';
 
 export default function ActivityHistoryScreen({ onBack, embedded = false }) {
   const { isDarkMode } = useTheme();
-  const { t } = useLanguage();
   const { activePatientName, setActiveCaregiverSubScreen, realRecentActivity } = useNoklai();
 
   const todayActivities = realRecentActivity.filter((a) => a.day === 'Today');
@@ -65,7 +63,7 @@ export default function ActivityHistoryScreen({ onBack, embedded = false }) {
                     ]}
                     numberOfLines={1}
                   >
-                    {t('noklai.history.playedGame', 'Played %{game}', { game: item.game })}
+                    Played {item.game}
                   </Text>
                   {item.status && (
                     <View
@@ -85,7 +83,7 @@ export default function ActivityHistoryScreen({ onBack, embedded = false }) {
                           { color: item.status === 'Completed' ? '#059669' : '#D97706' },
                         ]}
                       >
-                        {item.status === 'Completed' ? t('noklai.history.completed', 'Completed') : t('noklai.history.inProgress', 'In Progress')}
+                        {item.status}
                       </Text>
                     </View>
                   )}
@@ -97,14 +95,14 @@ export default function ActivityHistoryScreen({ onBack, embedded = false }) {
                   {item.accuracy && (
                     <View style={[styles.metaBadge, { backgroundColor: isDarkMode ? '#064E3B' : '#E8F5E9' }]}>
                       <Text style={[styles.metaBadgeText, { color: '#059669' }]}>
-                        {t('noklai.history.accuracy', 'Accuracy')}: {item.accuracy}
+                        Accuracy: {item.accuracy}
                       </Text>
                     </View>
                   )}
                   {item.durationFormatted && (
                     <View style={[styles.metaBadge, { backgroundColor: isDarkMode ? '#1E293B' : '#F1F5F9' }]}>
                       <Text style={[styles.metaBadgeText, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>
-                        {t('noklai.history.duration', 'Duration')}: {item.durationFormatted}
+                        Duration: {item.durationFormatted}
                       </Text>
                     </View>
                   )}
@@ -138,7 +136,7 @@ export default function ActivityHistoryScreen({ onBack, embedded = false }) {
               { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
             ]}
           >
-            {t('noklai.history.title', 'Recent Activity')}
+            Recent Activity
           </Text>
           <Text
             style={[
@@ -146,16 +144,16 @@ export default function ActivityHistoryScreen({ onBack, embedded = false }) {
               { color: isDarkMode ? noklaiTheme.colors.textSecondaryDark : noklaiTheme.colors.textSecondary },
             ]}
           >
-            {t('noklai.history.subtitle', "%{name}'s verified gameplay history", { name: activePatientName })}
+            {activePatientName}&apos;s verified gameplay history
           </Text>
         </View>
       )}
 
       {hasActivity ? (
         <View>
-          {renderSection(t('noklai.history.today', 'Today'), todayActivities)}
-          {renderSection(t('noklai.history.yesterday', 'Yesterday'), yesterdayActivities)}
-          {renderSection(t('noklai.history.earlier', 'Earlier this week'), earlierActivities)}
+          {renderSection('Today', todayActivities)}
+          {renderSection('Yesterday', yesterdayActivities)}
+          {renderSection('Earlier this week', earlierActivities)}
         </View>
       ) : (
         <NoklaiCard style={styles.emptyContainer}>
@@ -166,10 +164,10 @@ export default function ActivityHistoryScreen({ onBack, embedded = false }) {
               { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
             ]}
           >
-            {t('noklai.history.noActivityTitle', 'No recorded activities yet')}
+            No recorded activities yet
           </Text>
           <Text style={[styles.emptySub, { color: isDarkMode ? '#9CA3AF' : '#656F7D' }]}>
-            {t('noklai.history.noActivitySub', 'Completed brain game sessions will automatically appear here with timestamps and recall accuracy.', { name: activePatientName })}
+            Completed brain game sessions will automatically appear here with timestamps and recall accuracy.
           </Text>
         </NoklaiCard>
       )}
@@ -194,7 +192,7 @@ export default function ActivityHistoryScreen({ onBack, embedded = false }) {
       <NoklaiHeader
         showBack
         onBack={onBack || (() => setActiveCaregiverSubScreen('progress'))}
-        title={t('noklai.history.title', 'Recent Activity')}
+        title="Recent Activity"
       />
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {content}

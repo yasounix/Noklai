@@ -10,7 +10,7 @@
  */
 
 import { SessionManager } from './SessionManager.js';
-import { defaultDifficultyEngine } from './DifficultyEngine.js';
+import { DifficultyEngine, defaultDifficultyEngine } from './DifficultyEngine.js';
 import {
   calculateAccuracy,
   calculateErrorRate,
@@ -19,14 +19,13 @@ import {
   calculateConsistencyScore,
   calculatePerformanceScore,
 } from './MetricsCalculator.js';
-import { defaultPerformanceService } from './SupabasePerformanceService.js';
+import { SupabasePerformanceService, defaultPerformanceService } from './SupabasePerformanceService.js';
 import { cognitiveAnalytics } from './CognitiveAnalyticsService.js';
-import { getGameDisplayName, resolveGameDomain, getCanonicalGameId } from './gameRegistry.js';
-import { defaultLocalStorage } from '../LocalPerformanceStorage.js';
+import { defaultLocalStorage } from '../../games/suhTahLam/storage/LocalPerformanceStorage.js';
 
 export class PerformanceTracker {
   constructor({
-    gameType = 'suh_tah_lam',
+    gameType = 'dhop_khel',
     playerId = null,
     difficultyEngine = defaultDifficultyEngine,
     performanceService = defaultPerformanceService,
@@ -103,7 +102,7 @@ export class PerformanceTracker {
 
   /**
    * Records the exact moment the recall decision phase starts
-   * (e.g. cue hides, targets become selectable)
+   * (e.g. Dhop ball hides, players become selectable)
    */
   recordRecallStart() {
     this.interactionStartTimestamp = Date.now();
@@ -206,13 +205,11 @@ export class PerformanceTracker {
       this.activeRound.isCorrect
     );
 
-    // Calculate rolling consistency with historical rounds (filtering nulls)
+    // Calculate rolling consistency with historical rounds
     const recentAccuracies = [
       ...this.roundHistory.map((r) => r.accuracy),
       accuracy,
-    ]
-      .filter((a) => typeof a === 'number' && Number.isFinite(a))
-      .slice(-10);
+    ].slice(-10);
     const consistencyScore = calculateConsistencyScore(recentAccuracies);
 
     const performanceScore = calculatePerformanceScore({
@@ -300,13 +297,24 @@ export class PerformanceTracker {
 
     // Record in unified caregiver cognitive analytics service
     try {
-      const canonicalGameId = getCanonicalGameId(this.gameType);
-      const gameName = getGameDisplayName(this.gameType);
-      const domain = resolveGameDomain(this.gameType);
+      const gameNames = {
+        suh_tah_lam: 'Suh Tah Lam',
+        ubilakapki: 'Ubilakapki Coconut Toss',
+        dhop_khel: 'Dhopkhel Catch',
+        northeast: 'Sinaki Sthan',
+        stories: 'Memory Stories',
+      };
       await cognitiveAnalytics.recordGameSession({
-        gameId: canonicalGameId,
-        gameName,
-        domain,
+        gameId: this.gameType,
+        gameName: gameNames[this.gameType] || this.gameType,
+        domain:
+          this.gameType === 'ubilakapki'
+            ? 'spatial_coordination'
+            : this.gameType === 'dhop_khel'
+            ? 'attention_focus'
+            : this.gameType === 'suh_tah_lam'
+            ? 'visual_memory'
+            : 'visual_memory',
         difficulty: completedRound.difficulty,
         durationSec: completedRound.completionTimeSec || 0,
         questionsTotal: completedRound.attempts,
@@ -345,80 +353,15 @@ export class PerformanceTracker {
     if (!this.activeRound) return null;
 
     const roundEnd = new Date().toISOString();
-    const roundStart = this.activeRound.startedAt;
-    const completionTimeSec = roundStart
-      ? Math.max(0, Math.round((new Date(roundEnd).getTime() - new Date(roundStart).getTime()) / 1000))
-      : 0;
-
-    const currentSession = this.sessionManager.getSession();
-    const sessionId = currentSession?.id || `sess_${Date.now()}`;
-
     const abandonedRound = {
       ...this.activeRound,
-      gameId: this.gameType,
-      playerId: this.playerId,
-      sessionId,
-      status: 'abandoned',
       completedAt: roundEnd,
-      completionTimeSec,
       isAbandoned: true,
       accuracy: 0,
       performanceScore: 0,
-      eligibleForCVI: false,
     };
 
-    // Record abandoned round in roundHistory
-    this.roundHistory.push(abandonedRound);
-
-    // Record in active session without abandoning the whole session
-    if (this.sessionManager.getSession()) {
-      this.sessionManager.recordRound(abandonedRound);
-    }
-
-    // Persist locally
-    if (this.playerId) {
-      defaultLocalStorage
-        .saveRoundResult({
-          session: { id: sessionId, playerId: this.playerId, gameId: this.gameType },
-          roundData: abandonedRound,
-          profile: this.profile,
-        })
-        .catch((localErr) => {
-          console.warn('[PerformanceTracker] LocalPerformanceStorage save notice on abandon:', localErr?.message);
-        });
-    }
-
-    // Persist to cognitive analytics
-    try {
-      const canonicalGameId = getCanonicalGameId(this.gameType);
-      const gameName = getGameDisplayName(this.gameType);
-      const domain = resolveGameDomain(this.gameType);
-      cognitiveAnalytics
-        .recordGameSession({
-          gameId: canonicalGameId,
-          gameName,
-          domain,
-          difficulty: abandonedRound.difficulty || 'easy',
-          durationSec: completionTimeSec,
-          questionsTotal: abandonedRound.attempts || 0,
-          questionsCorrect: abandonedRound.correctAttempts || 0,
-          accuracy: 0,
-          responseTimeSec: null,
-          score: 0,
-          patientId: this.playerId,
-          metadata: {
-            sessionId,
-            roundNumber: abandonedRound.roundNumber,
-            status: 'abandoned',
-            isAbandoned: true,
-            eligibleForCVI: false,
-          },
-        })
-        .catch(() => {});
-    } catch (e) {
-      console.warn('[PerformanceTracker] Error recording abandoned round in cognitiveAnalytics:', e);
-    }
-
+    this.sessionManager.abandonSession();
     this.activeRound = null;
     this.interactionStartTimestamp = null;
 
@@ -449,18 +392,8 @@ export class PerformanceTracker {
       };
     }
 
-    const eligibleRounds = this.roundHistory.filter(
-      (r) => r && !r.isAbandoned && r.eligibleForCVI !== false && Number.isFinite(r.attempts) && r.attempts > 0
-    );
-
-    let totalAttempts = 0;
-    let totalCorrectAttempts = 0;
-    for (const r of eligibleRounds) {
-      totalAttempts += r.attempts;
-      totalCorrectAttempts += Number.isFinite(r.correctAttempts) ? r.correctAttempts : (r.isCorrect ? 1 : 0);
-    }
-
-    const accuracy = totalAttempts > 0 ? Math.round((totalCorrectAttempts / totalAttempts) * 100) : 0;
+    const correctRounds = this.roundHistory.filter((r) => r.isCorrect).length;
+    const accuracy = Math.round((correctRounds / totalRounds) * 100);
 
     const validTimes = this.roundHistory
       .map((r) => r.responseTimeMs)
@@ -505,13 +438,5 @@ export class PerformanceTracker {
         score: Math.round((r.performanceScore || 0) * 100),
       })),
     };
-  }
-
-  /**
-   * Flushes offline queue for this player across all subsystems
-   */
-  async flushOfflineQueue() {
-    if (!this.playerId) return { synced: 0, remaining: 0 };
-    return await cognitiveAnalytics.flushOfflineQueue(this.playerId);
   }
 }

@@ -4,8 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../theme/noklaiTheme';
 import { useTheme } from '../../context/ThemeContext';
 import { useNoklai } from '../context/NoklaiContext';
-import { useLanguage } from '../../context/LanguageContext';
-import { callPhone, getCallNumber } from '../../utils/callService';
 import AIButton from './AIButton';
 
 export default function NoklaiHeader({
@@ -18,15 +16,12 @@ export default function NoklaiHeader({
   rightAction,
 }) {
   const { isDarkMode } = useTheme();
-  const { role, patientPhone, caregiverPhone, setAiModalVisible } = useNoklai();
-  const { t } = useLanguage();
+  const { role, setRole, setAiModalVisible } = useNoklai();
 
   const isCaregiver = role === 'caregiver';
-  const callLabel = isCaregiver ? t('callPatient') : t('callCaregiver');
-  const callNumber = getCallNumber(role, patientPhone, caregiverPhone);
 
-  const handleCall = () => {
-    if (callNumber) callPhone(callNumber);
+  const toggleRole = () => {
+    setRole(isCaregiver ? 'patient' : 'caregiver');
   };
 
   return (
@@ -109,18 +104,44 @@ export default function NoklaiHeader({
 
         {showRoleBadge && (
           <TouchableOpacity
-            onPress={handleCall}
-            disabled={!callNumber}
-            style={[styles.callButton, !callNumber && styles.callButtonDisabled]}
+            onPress={toggleRole}
+            style={[
+              styles.roleBadge,
+              {
+                backgroundColor: isCaregiver
+                  ? noklaiTheme.colors.primarySoft
+                  : noklaiTheme.colors.patientGreenLight,
+                borderColor: isCaregiver
+                  ? '#D8B4FE'
+                  : '#BBF7D0',
+              },
+            ]}
             activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={callLabel}
-            accessibilityState={{ disabled: !callNumber }}
+            accessibilityLabel={`Switch role from ${role}`}
           >
             <Ionicons
-              name="call-outline"
-              size={17}
-              color={callNumber ? noklaiTheme.colors.primary : noklaiTheme.colors.textSecondary}
+              name={isCaregiver ? 'heart-outline' : 'person-outline'}
+              size={12}
+              color={isCaregiver ? noklaiTheme.colors.primary : noklaiTheme.colors.patientGreen}
+              style={{ marginRight: 4 }}
+            />
+            <Text
+              style={[
+                styles.roleBadgeText,
+                {
+                  color: isCaregiver
+                    ? noklaiTheme.colors.primary
+                    : noklaiTheme.colors.patientGreen,
+                },
+              ]}
+            >
+              {isCaregiver ? 'Caregiver' : 'Patient'}
+            </Text>
+            <Ionicons
+              name="swap-horizontal"
+              size={11}
+              color={isCaregiver ? noklaiTheme.colors.primary : noklaiTheme.colors.patientGreen}
+              style={{ marginLeft: 3 }}
             />
           </TouchableOpacity>
         )}
@@ -183,19 +204,6 @@ const styles = StyleSheet.create({
   rightRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  callButton: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 16,
-    backgroundColor: noklaiTheme.colors.primarySoft,
-    borderWidth: 1,
-    borderColor: '#D8B4FE',
-  },
-  callButtonDisabled: {
-    opacity: 0.5,
   },
   roleBadge: {
     flexDirection: 'row',

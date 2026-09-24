@@ -19,7 +19,6 @@ import NoklaiCard from '../../components/NoklaiCard';
 import QuoteCard from '../../components/QuoteCard';
 import AIButton from '../../components/AIButton';
 import NoklaiButton from '../../components/NoklaiButton';
-import CallButton from '../../components/CallButton';
 
 export default function PatientHomeScreen({
   onNavigateToGames,
@@ -99,12 +98,8 @@ export default function PatientHomeScreen({
             </Text>
           </View>
 
-          <View style={styles.headerActions}>
-            <AIButton
-              variant="header"
-              onPress={onOpenAI || (() => setAiModalVisible(true))}
-            />
-            <CallButton />
+          <View style={[styles.avatarCircle, { backgroundColor: '#FEF3C7' }]}>
+            <Text style={{ fontSize: 36 }}>{patientAvatar}</Text>
           </View>
         </View>
 
@@ -418,10 +413,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 14,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   greetingSub: {
     fontSize: 16,

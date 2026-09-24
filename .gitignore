@@ -41,9 +41,3 @@ yarn-error.*
 # generated native folders
 /ios
 /android
-
-# Archived duplicate folders (do not track or scan)
-sih-2026-memory-assistant/
-sih-2026-memory-assistant01/
-_ARCHIVE_DO_NOT_USE_*
-supabase/.temp/

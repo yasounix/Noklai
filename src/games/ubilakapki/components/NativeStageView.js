@@ -24,6 +24,7 @@ import {
   StyleSheet,
   Animated,
   Easing,
+  Platform,
 } from 'react-native';
 import { useLanguage } from '../../../context/LanguageContext';
 import { getRingCoordinates, PLAYER_ARCHETYPES } from '../data/players.js';

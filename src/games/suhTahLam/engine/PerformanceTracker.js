@@ -13,14 +13,15 @@
  */
 
 import { CognitiveProfile } from './CognitiveProfile.js';
-import { defaultDifficultyEngine } from './DifficultyEngine.js';
-import { defaultLocalStorage } from '../storage/LocalPerformanceStorage.js';
+import { DifficultyEngine, defaultDifficultyEngine } from './DifficultyEngine.js';
+import { LocalPerformanceStorage, defaultLocalStorage } from '../storage/LocalPerformanceStorage.js';
+import { validateRoundResult } from './CognitiveVitalityIndex.js';
 import { cognitiveAnalytics } from '../../../modules/performance/CognitiveAnalyticsService.js';
 
 export class PerformanceTracker {
   constructor({
     gameId = 'suh_tah_lam',
-    playerId = null,
+    playerId = 'P001',
     difficultyEngine = defaultDifficultyEngine,
     storage = defaultLocalStorage,
   } = {}) {
@@ -69,7 +70,7 @@ export class PerformanceTracker {
 
     this.activeRound = {
       roundNumber,
-      sessionId: sessionId ,
+      sessionId: sessionId || null,
       playerId: this.playerId,
       gameId: this.gameId,
       mode: metadata.mode || 'standard',
@@ -330,7 +331,7 @@ export class PerformanceTracker {
     try {
       await this.storage.saveRoundResult({
         session: {
-          id: completedRound.sessionId ,
+          id: completedRound.sessionId || null,
           playerId: this.playerId,
           gameId: this.gameId,
         },
@@ -359,7 +360,7 @@ export class PerformanceTracker {
         score: typeof completedRound.score === 'number' ? completedRound.score : Math.round((completedRound.performanceScore || 0) * 10),
         patientId: this.playerId,
         metadata: {
-          sessionId: completedRound.sessionId ,
+          sessionId: completedRound.sessionId || null,
           roundNumber: completedRound.roundNumber,
           eligibleForCVI: completedRound.eligibleForCVI,
         },

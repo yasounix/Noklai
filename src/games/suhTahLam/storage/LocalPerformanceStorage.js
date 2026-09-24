@@ -219,7 +219,7 @@ export class LocalPerformanceStorage extends PerformanceRepository {
         ...rawRound,
         dataQuality,
         eligibleForCVI: validation.valid === true,
-        validationReason: validation.reason ,
+        validationReason: validation.reason || null,
       };
 
       // 7. Deduplicate existing rounds
@@ -376,7 +376,7 @@ export class LocalPerformanceStorage extends PerformanceRepository {
             playerId: r.playerId || cleanPlayerId,
             eligibleForCVI: r.eligibleForCVI === true,
             dataQuality: r.dataQuality || (r.eligibleForCVI === true ? 'verified_gameplay' : 'invalid_gameplay'),
-            validationReason: r.validationReason ,
+            validationReason: r.validationReason || null,
           };
         });
 

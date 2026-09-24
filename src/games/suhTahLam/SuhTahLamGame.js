@@ -40,6 +40,7 @@ import { SessionManager } from './engine/SessionManager';
 import { defaultSequenceManager } from './engine/SequenceManager';
 import { defaultDifficultyEngine } from './engine/DifficultyEngine';
 import { defaultLocalStorage } from './storage/LocalPerformanceStorage';
+import { cognitiveAnalytics } from '../../modules/performance';
 
 import SequencePlayer from './components/SequencePlayer';
 import QuestionView from './components/QuestionView';
@@ -63,7 +64,7 @@ export default function SuhTahLamGame({ onExit, patientId: propPatientId }) {
   const { t, currentLanguage } = useLanguage();
   const { currentPatientId, patientId } = usePatient?.() || {};
   // Safe fallback to P001 only if context is unconfigured
-  const effectivePlayerId = propPatientId || patientId || currentPatientId ;
+  const effectivePlayerId = propPatientId || patientId || currentPatientId || 'P001';
 
   const [currentStep, setCurrentStep] = useState(GAME_STEPS.START);
   const [currentDifficulty, setCurrentDifficulty] = useState('easy');
@@ -129,7 +130,7 @@ export default function SuhTahLamGame({ onExit, patientId: propPatientId }) {
       trackerRef.current.startRound({
         difficulty: currentDifficulty,
         sequenceId: sequence.id,
-        sessionId: currentSession?.id ,
+        sessionId: currentSession?.id || null,
       });
     }
 

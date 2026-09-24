@@ -11,7 +11,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../../theme/noklaiTheme';
 import { useTheme } from '../../../context/ThemeContext';
-import { useLanguage } from '../../../context/LanguageContext';
 import { useNoklai } from '../../context/NoklaiContext';
 import NoklaiHeader from '../../components/NoklaiHeader';
 
@@ -24,7 +23,6 @@ import MemoryStoriesGame from '../../../games/MemoryStoriesGame';
 
 export default function PatientGamesScreen({ onBack }) {
   const { isDarkMode } = useTheme();
-  const { t } = useLanguage();
   const { activePatientGame, setActivePatientGame, handleGameFinished, activePatientId } = useNoklai();
 
   // Listen to Android hardware back button when a game is active
@@ -45,45 +43,45 @@ export default function PatientGamesScreen({ onBack }) {
   const games = [
     {
       id: 'suhTahLam',
-      title: t('suhTahLam.title', '🎋 Suh Tah Lam'),
-      tagline: t('suhTahLam.tagline', 'Observe the rhythm, remember the movement'),
-      category: t('noklai.games.categories.rhythm', 'Mizo Cultural Rhythm'),
+      title: '🎋 Suh Tah Lam',
+      tagline: 'Observe the rhythm, remember the movement',
+      category: 'Mizo Cultural Rhythm',
       badgeColor: '#D97706',
       badgeBg: '#FEF3C7',
       icon: 'musical-notes',
     },
     {
       id: 'ubilakapki',
-      title: t('ubilakapki.title', '🥥 Ubilakapki Coconut Toss'),
-      tagline: t('ubilakapki.tagline', 'Watch the circle closely, remember the movement, and recall where the coconut goes.'),
-      category: t('noklai.games.categories.culturalMemory', 'CULTURAL MEMORY'),
+      title: '🥥 Ubilakapki Coconut Toss',
+      tagline: 'Watch the circle closely, remember the movement, and recall where the coconut goes.',
+      category: 'CULTURAL MEMORY',
       badgeColor: '#B45309',
       badgeBg: '#FDE68A',
       icon: 'ellipse',
     },
     {
       id: 'northeast',
-      title: t('northeastMemory.title', '🏞️ Sinaki Sthan'),
-      tagline: t('northeastMemory.tagline', 'Observe scenic photos and recall details'),
-      category: t('noklai.games.categories.culturalMemory', 'CULTURAL MEMORY'),
+      title: '🏞️ Sinaki Sthan',
+      tagline: 'Observe scenic photos and recall details',
+      category: 'CULTURAL MEMORY',
       badgeColor: '#059669',
       badgeBg: '#D1FAE5',
       icon: 'images',
     },
     {
       id: 'dhopkhel',
-      title: t('dhopkhel.title', '⚽ Dhopkhel Ball Toss'),
-      tagline: t('dhopkhel.tagline', 'Traditional Assamese ball catch & coordinate'),
-      category: t('noklai.games.categories.coordination', 'Coordination & Focus'),
+      title: '⚽ Dhopkhel Ball Toss',
+      tagline: 'Traditional Assamese ball catch & coordinate',
+      category: 'Coordination & Focus',
       badgeColor: '#2563EB',
       badgeBg: '#DBEAFE',
       icon: 'football',
     },
     {
       id: 'stories',
-      title: t('memoryStories.title', '📖 Xuworoni Kotha'),
-      tagline: t('memoryStories.tagline', 'Read traditional folklore and recall details'),
-      category: t('noklai.games.categories.culturalMemory', 'CULTURAL MEMORY'),
+      title: '📖 Xuworoni Kotha',
+      tagline: 'Read traditional folklore and recall details',
+      category: 'CULTURAL MEMORY',
       badgeColor: '#7C3AED',
       badgeBg: '#EDE9FE',
       icon: 'book',
@@ -100,7 +98,7 @@ export default function PatientGamesScreen({ onBack }) {
 
   // If a game is active, render that interactive game with BOTH in-game onExit and persistent top bar back button!
   if (activePatientGame) {
-    const currentPatientId = activePatientId ;
+    const currentPatientId = activePatientId || 'P001';
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: isDarkMode ? '#111827' : '#FFFFFF' }}>
         <View style={styles.gameExitHeader}>
@@ -112,7 +110,7 @@ export default function PatientGamesScreen({ onBack }) {
             accessibilityLabel="Exit game and return to games list"
           >
             <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-            <Text style={styles.gameExitText}>{t('noklai.games.backToGames', 'Back to Games')}</Text>
+            <Text style={styles.gameExitText}>Back to Games</Text>
           </TouchableOpacity>
         </View>
 
@@ -138,7 +136,7 @@ export default function PatientGamesScreen({ onBack }) {
         },
       ]}
     >
-      <NoklaiHeader title={t('noklai.games.title', 'Brain Games')} />
+      <NoklaiHeader title="Brain Games" />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.headerBox}>
@@ -148,7 +146,7 @@ export default function PatientGamesScreen({ onBack }) {
               { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
             ]}
           >
-            {t('noklai.games.screenTitle', 'Cultural Brain Exercises')}
+            Cultural Brain Exercises
           </Text>
           <Text
             style={[
@@ -156,7 +154,7 @@ export default function PatientGamesScreen({ onBack }) {
               { color: isDarkMode ? noklaiTheme.colors.textSecondaryDark : noklaiTheme.colors.textSecondary },
             ]}
           >
-            {t('noklai.games.screenSubtitle', 'Select a friendly exercise to help keep your memory active, joyful, and connected.')}
+            Select a friendly exercise to help keep your memory active, joyful, and connected.
           </Text>
         </View>
 

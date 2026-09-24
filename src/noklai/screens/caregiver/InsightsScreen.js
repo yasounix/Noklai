@@ -11,7 +11,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../../theme/noklaiTheme';
 import { useTheme } from '../../../context/ThemeContext';
-import { useLanguage } from '../../../context/LanguageContext';
 import { useNoklai } from '../../context/NoklaiContext';
 import NoklaiHeader from '../../components/NoklaiHeader';
 import NoklaiButton from '../../components/NoklaiButton';
@@ -20,7 +19,6 @@ import CaregiverAnalyticsScreen from '../../../screens/CaregiverAnalyticsScreen'
 
 export default function InsightsScreen({ onBack, onNavigateToGames }) {
   const { isDarkMode } = useTheme();
-  const { t } = useLanguage();
   const {
     role,
     activePatientName,
@@ -52,24 +50,24 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
         : null);
 
   const vitalityLevel = useMemo(() => {
-    if (vitalityScore === null) return { title: t('noklai.insights.buildingVitality', 'Building Vitality'), emoji: '🌱', color: '#16A34A', desc: 'Starting your cognitive routine' };
-    if (vitalityScore >= 80) return { title: t('noklai.insights.peakVitality', 'Peak Vitality'), emoji: '🌟', color: '#EAB308', desc: 'Outstanding memory retention & sharpness!' };
-    if (vitalityScore >= 65) return { title: t('noklai.insights.strongSteady', 'Strong & Steady'), emoji: '🌿', color: '#16A34A', desc: 'Great consistency and solid focus!' };
-    if (vitalityScore >= 50) return { title: t('noklai.insights.activeRoutine', 'Active Routine'), emoji: '⚡', color: '#2563EB', desc: 'Good rhythm, keep playing daily!' };
-    return { title: t('noklai.insights.buildingVitality', 'Building Vitality'), emoji: '🌱', color: '#0D9488', desc: 'Every exercise strengthens your brain pathways.' };
-  }, [vitalityScore, t]);
+    if (vitalityScore === null) return { title: 'Building Vitality', emoji: '🌱', color: '#16A34A', desc: 'Starting your cognitive routine' };
+    if (vitalityScore >= 80) return { title: 'Peak Vitality', emoji: '🌟', color: '#EAB308', desc: 'Outstanding memory retention & sharpness!' };
+    if (vitalityScore >= 65) return { title: 'Strong & Steady', emoji: '🌿', color: '#16A34A', desc: 'Great consistency and solid focus!' };
+    if (vitalityScore >= 50) return { title: 'Active Routine', emoji: '⚡', color: '#2563EB', desc: 'Good rhythm, keep playing daily!' };
+    return { title: 'Building Vitality', emoji: '🌱', color: '#0D9488', desc: 'Every exercise strengthens your brain pathways.' };
+  }, [vitalityScore]);
 
   // Cognitive Domains for Patient
   const domainsList = useMemo(() => {
     const d = analyticsData?.domains || {};
     return [
-      { key: 'visual_memory', label: t('noklai.insights.memoryRecall', 'Memory Recall'), icon: 'images', score: d.visual_memory?.score ?? null, color: '#2563EB' },
-      { key: 'attention_focus', label: t('noklai.insights.attentionFocus', 'Attention & Focus'), icon: 'eye', score: d.attention_focus?.score ?? null, color: '#16A34A' },
-      { key: 'processing_speed', label: t('noklai.insights.reactionSpeed', 'Reaction Speed'), icon: 'flash', score: d.processing_speed?.score ?? null, color: '#D97706' },
-      { key: 'episodic_recall', label: t('noklai.insights.culturalStories', 'Cultural Stories'), icon: 'book', score: d.episodic_recall?.score ?? null, color: '#7C3AED' },
-      { key: 'spatial_coordination', label: t('noklai.insights.spatialAwareness', 'Spatial Awareness'), icon: 'compass', score: d.spatial_coordination?.score ?? null, color: '#EA580C' },
+      { key: 'visual_memory', label: 'Memory Recall', icon: 'images', score: d.visual_memory?.score ?? null, color: '#2563EB' },
+      { key: 'attention_focus', label: 'Attention & Focus', icon: 'eye', score: d.attention_focus?.score ?? null, color: '#16A34A' },
+      { key: 'processing_speed', label: 'Reaction Speed', icon: 'flash', score: d.processing_speed?.score ?? null, color: '#D97706' },
+      { key: 'episodic_recall', label: 'Cultural Stories', icon: 'book', score: d.episodic_recall?.score ?? null, color: '#7C3AED' },
+      { key: 'spatial_coordination', label: 'Spatial Awareness', icon: 'compass', score: d.spatial_coordination?.score ?? null, color: '#EA580C' },
     ];
-  }, [analyticsData, t]);
+  }, [analyticsData]);
 
   // Determine highest domain
   const bestDomain = useMemo(() => {
@@ -108,7 +106,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
       <NoklaiHeader
         showBack={Boolean(onBack)}
         onBack={onBack || (() => setActiveCaregiverSubScreen(null))}
-        title={t('noklai.insights.title', 'Cognitive Insights')}
+        title="Your Insights"
       />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -120,7 +118,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
               { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
             ]}
           >
-            {t('noklai.insights.brainVitality', 'Brain Vitality')}
+            Brain Vitality
           </Text>
           <Text
             style={[
@@ -129,8 +127,8 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
             ]}
           >
             {hasSessions
-              ? t('noklai.insights.progressGreeting', 'Wonderful progress, %{name}! Here is how your mind is staying active.', { name: activePatientName })
-              : t('noklai.insights.welcomeGreeting', 'Welcome, %{name}! Your brain insights will blossom as you play.', { name: activePatientName })}
+              ? `Wonderful progress, ${activePatientName}! Here is how your mind is staying active.`
+              : `Welcome, ${activePatientName}! Your brain insights will blossom as you play.`}
           </Text>
         </View>
 
@@ -154,7 +152,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
                 { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
               ]}
             >
-              {t('noklai.insights.startInsights', 'Start Building Your Insights')}
+              Start Building Your Insights
             </Text>
             <Text
               style={[
@@ -162,12 +160,12 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
                 { color: isDarkMode ? noklaiTheme.colors.textSecondaryDark : noklaiTheme.colors.textSecondary },
               ]}
             >
-              {t('noklai.insights.noDataDesc', 'No gameplay data available yet. Complete a game to start seeing real performance insights.')}
+              No gameplay data available yet. Complete a game to start seeing real performance insights.
             </Text>
 
             {onNavigateToGames && (
               <NoklaiButton
-                title={t('noklai.insights.playFirstGame', 'Play Your First Game')}
+                title="Play Your First Game"
                 variant="primary"
                 icon="game-controller"
                 size="lg"
@@ -189,7 +187,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                 <Ionicons name="sunny" size={20} color="#2563EB" style={{ marginRight: 8 }} />
                 <Text style={[styles.recTitle, { color: isDarkMode ? '#93C5FD' : '#1E40AF' }]}>
-                  {t('noklai.insights.recExercise', "Today's Recommended Exercise")}
+                  Today's Recommended Exercise
                 </Text>
               </View>
               <Text style={[styles.recGameName, { color: isDarkMode ? '#FFFFFF' : '#1E3A8A' }]}>
@@ -258,21 +256,21 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
                   <Text style={[styles.vitalMiniVal, { color: isDarkMode ? '#FFFFFF' : '#1E293B' }]}>
                     {totalSessionsCount}
                   </Text>
-                  <Text style={styles.vitalMiniLbl}>{t('noklai.insights.exercisesDone', 'Exercises Done')}</Text>
+                  <Text style={styles.vitalMiniLbl}>Exercises Done</Text>
                 </View>
                 <View style={styles.vitalMiniDivider} />
                 <View style={styles.vitalMiniItem}>
                   <Text style={[styles.vitalMiniVal, { color: '#16A34A' }]}>
                     {computedStats.daysActiveThisWeek} Days
                   </Text>
-                  <Text style={styles.vitalMiniLbl}>{t('noklai.insights.activeStreak', 'Active Streak')}</Text>
+                  <Text style={styles.vitalMiniLbl}>Active Streak</Text>
                 </View>
                 <View style={styles.vitalMiniDivider} />
                 <View style={styles.vitalMiniItem}>
                   <Text style={[styles.vitalMiniVal, { color: '#2563EB' }]}>
                     {computedStats.avgAccuracy !== null ? `${computedStats.avgAccuracy}%` : '--'}
                   </Text>
-                  <Text style={styles.vitalMiniLbl}>{t('noklai.insights.avgAccuracy', 'Avg Accuracy')}</Text>
+                  <Text style={styles.vitalMiniLbl}>Avg Accuracy</Text>
                 </View>
               </View>
             </View>
@@ -291,10 +289,10 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
                 <Ionicons name="trophy" size={24} color="#D97706" style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.superpowerTitle, { color: isDarkMode ? '#FDE68A' : '#92400E' }]}>
-                    {t('noklai.insights.superpowerTitle', 'Your Superpower This Week')}
+                    Your Superpower This Week
                   </Text>
                   <Text style={[styles.superpowerDesc, { color: isDarkMode ? '#FEF08A' : '#B45309' }]}>
-                    {t('noklai.insights.superpowerDesc', '%{domain} is your strongest cognitive domain (%{score}% accuracy).', { domain: bestDomain.label, score: bestDomain.score })}
+                    {bestDomain.label} is your strongest cognitive domain ({bestDomain.score}% accuracy).
                   </Text>
                 </View>
               </View>
@@ -316,7 +314,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
                   { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
                 ]}
               >
-                {t('noklai.insights.brainStrengths', 'Your Brain Strengths')}
+                Your Brain Strengths
               </Text>
               <Text
                 style={[
@@ -324,7 +322,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
                   { color: isDarkMode ? noklaiTheme.colors.textSecondaryDark : noklaiTheme.colors.textSecondary },
                 ]}
               >
-                {t('noklai.insights.strengthsSub', 'Gentle breakdown developed from your traditional game sessions.')}
+                Gentle breakdown developed from your traditional game sessions.
               </Text>
 
               {domainsList.map((domain) => {
@@ -346,7 +344,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
                         </Text>
                       </View>
                       <Text style={[styles.domainScoreText, { color: domain.color }]}>
-                        {domain.score !== null ? `${domain.score}%` : t('noklai.insights.awaitingData', 'Awaiting data')}
+                        {domain.score !== null ? `${domain.score}%` : 'Awaiting data'}
                       </Text>
                     </View>
                     {/* Progress Bar */}
@@ -385,7 +383,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
                     { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
                   ]}
                 >
-                  {t('noklai.insights.recentActivities', 'Recent Activities')}
+                  Recent Activities
                 </Text>
                 <Text
                   style={[
@@ -393,7 +391,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
                     { color: isDarkMode ? noklaiTheme.colors.textSecondaryDark : noklaiTheme.colors.textSecondary },
                   ]}
                 >
-                  {t('noklai.insights.recentActivitiesSub', 'Completed exercises and joyful moments.')}
+                  Completed exercises and joyful moments.
                 </Text>
 
                 {allSessions.slice(0, 4).map((session, index) => {
@@ -457,7 +455,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
               <View style={styles.recCardHeader}>
                 <Ionicons name="sparkles" size={22} color="#2563EB" />
                 <Text style={[styles.recCardTitle, { color: isDarkMode ? '#93C5FD' : '#1E40AF' }]}>
-                  {t('noklai.insights.recExercise', "Today's Recommended Brain Exercise")}
+                  Today's Recommended Brain Exercise
                 </Text>
               </View>
               <Text style={[styles.recGameHeading, { color: isDarkMode ? '#FFFFFF' : '#1E3A8A' }]}>
@@ -472,7 +470,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
                   onPress={onNavigateToGames}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.playNowBtnText}>{t('noklai.insights.playThisExercise', 'Play This Exercise')}</Text>
+                  <Text style={styles.playNowBtnText}>Play This Exercise</Text>
                   <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
               )}
@@ -483,7 +481,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
         {/* Action Buttons: AI Recommendation & Share */}
         <View style={styles.actionButtons}>
           <NoklaiButton
-            title={t('noklai.insights.askAiIdeas', 'Ask Noklai AI for Game Ideas')}
+            title="Ask Noklai AI for Game Ideas"
             variant="primary"
             icon="sparkles"
             size="md"
@@ -492,7 +490,7 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
           />
 
           <NoklaiButton
-            title={shared ? t('noklai.insights.progressShared', 'Progress Shared!') : t('noklai.insights.shareWithFamily', 'Share Progress with Family')}
+            title={shared ? 'Progress Shared!' : 'Share Progress with Family'}
             variant="outline"
             icon="share-outline"
             size="md"
@@ -502,8 +500,8 @@ export default function InsightsScreen({ onBack, onNavigateToGames }) {
 
         {/* Inspirational Motto Card */}
         <QuoteCard
-          quote={t('noklai.patientHome.quoteText', 'Every gentle exercise brightens memory and keeps family stories alive.')}
-          author={t('noklai.patientHome.quoteAuthor', 'Noklai Memory Care')}
+          quote="Every gentle exercise brightens memory and keeps family stories alive."
+          author="Noklai Memory Care"
         />
       </ScrollView>
     </SafeAreaView>

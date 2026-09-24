@@ -17,7 +17,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../supabaseClient.js';
 import { saveGameResult, getRemoteGameSessions } from '../database.js';
-import { calculateCVI, CVI_CONSTANTS } from './CognitiveVitalityIndex.js';
+import { calculateCVI, validateRoundResult, CVI_CONSTANTS } from './CognitiveVitalityIndex.js';
 
 const getStorage = () => {
   if (globalThis.AsyncStorage && typeof globalThis.AsyncStorage.getItem === 'function') return globalThis.AsyncStorage;
@@ -88,7 +88,7 @@ export class CognitiveAnalyticsService {
 
   _generateSessionId(patientId, gameId) {
     this._sessionCounter = (this._sessionCounter || 0) + 1;
-    return `sess_${Date.now()}_${this._sessionCounter}_${patientId }_${gameId || 'game'}`;
+    return `sess_${Date.now()}_${this._sessionCounter}_${patientId || 'P001'}_${gameId || 'game'}`;
   }
 
   /**
@@ -297,7 +297,7 @@ export class CognitiveAnalyticsService {
    * Computes comprehensive caregiver dashboard statistics strictly from verified gameplay data
    */
   async getCaregiverDashboardData(timeframe = '7d', patientInfo = {}) {
-    const pid = patientInfo?.patientId ;
+    const pid = patientInfo?.patientId || null;
     if (!pid) {
       return this._buildEmptyDashboard(timeframe);
     }
@@ -435,7 +435,7 @@ export class CognitiveAnalyticsService {
       clinicalObservations,
       gameBreakdown,
       isCalibrated,
-      lastSessionAt: filtered[filtered.length - 1]?.timestamp ,
+      lastSessionAt: filtered[filtered.length - 1]?.timestamp || null,
       disclaimer: CVI_CONSTANTS.DISCLAIMER,
     };
   }

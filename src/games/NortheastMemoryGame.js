@@ -47,7 +47,7 @@ const isValidId = (str) => {
 
 // Dev-only logger to satisfy Task 7 (never logs in production)
 const logDev = (message, ...args) => {
-  if (__DEV__) {
+  if (typeof __DEV__ !== 'undefined' && __DEV__) {
     console.log(`[NorthEastMemory] ${message}`, ...args);
   }
 };
@@ -162,7 +162,7 @@ export default function NortheastMemoryGame({
 
   // Validate patientId - fallback to P001 for seamless play
   const candidateId = propPatientId || patientId;
-  const activePatientId = candidateId && isValidId(candidateId) ? candidateId : null;
+  const activePatientId = candidateId && isValidId(candidateId) ? candidateId : 'P001';
 
   const handleExit = useCallback(() => {
     onExit?.();
@@ -548,13 +548,13 @@ export default function NortheastMemoryGame({
           <TouchableOpacity
             style={[styles.buttonBase, { backgroundColor: theme.primary, marginTop: 32 }]}
             onPress={() => {
-              logDev('Proceeding with testing profile Guest');
+              logDev('Proceeding with testing profile P001');
               setGameState('idle');
               loadNextScene();
             }}
           >
             <Text style={[styles.buttonText, { color: theme.cardBackground, fontWeight: 'bold' }]}>
-              Continue as Guest
+              Continue as Guest (P001)
             </Text>
           </TouchableOpacity>
 

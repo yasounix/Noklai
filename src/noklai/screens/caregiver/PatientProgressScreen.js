@@ -2,14 +2,10 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Modal,
-  Alert,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../../theme/noklaiTheme';
@@ -18,14 +14,9 @@ import { useNoklai } from '../../context/NoklaiContext';
 import { StatGrid } from '../../components/StatTile';
 import QuoteCard from '../../components/QuoteCard';
 import NoklaiHeader from '../../components/NoklaiHeader';
-import CaregiverContactButton from '../../components/CaregiverContactButton';
 import NoklaiButton from '../../components/NoklaiButton';
 import GamePerformanceScreen from './GamePerformanceScreen';
 import ActivityHistoryScreen from './ActivityHistoryScreen';
-import { callPhone } from '../../../utils/callService';
-import { normalizeIndianPhone } from '../../../utils/phoneValidation';
-
-const DOCTOR_STORAGE_PREFIX = '@caregiver_doctor_';
 
 export default function PatientProgressScreen({ onBack }) {
   const { isDarkMode } = useTheme();
@@ -36,77 +27,9 @@ export default function PatientProgressScreen({ onBack }) {
     setAiModalVisible,
     computedStats,
     realRecentActivity,
-    activePatientId,
   } = useNoklai();
 
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'games' | 'history'
-  const [doctor, setDoctor] = useState(null);
-  const [showDoctorModal, setShowDoctorModal] = useState(false);
-  const [showRemoveDoctorModal, setShowRemoveDoctorModal] = useState(false);
-  const [doctorName, setDoctorName] = useState('');
-  const [doctorPhone, setDoctorPhone] = useState('');
-  const [doctorError, setDoctorError] = useState('');
-
-  const doctorStorageKey = `${DOCTOR_STORAGE_PREFIX}${activePatientId || 'default'}`;
-
-  React.useEffect(() => {
-    let isMounted = true;
-    AsyncStorage.getItem(doctorStorageKey).then((storedDoctor) => {
-      if (!isMounted || !storedDoctor) return;
-      try {
-        const parsedDoctor = JSON.parse(storedDoctor);
-        if (parsedDoctor?.name && parsedDoctor?.phone) setDoctor(parsedDoctor);
-      } catch (error) {
-        setDoctor(null);
-      }
-    }).catch((error) => console.warn('Error loading doctor contact:', error));
-    return () => { isMounted = false; };
-  }, [doctorStorageKey]);
-
-  const openDoctorForm = () => {
-    setDoctorName(doctor?.name || '');
-    setDoctorPhone(doctor?.phone || '');
-    setDoctorError('');
-    setShowDoctorModal(true);
-  };
-
-  const handleSaveDoctor = async () => {
-    const name = doctorName.trim();
-    const phone = normalizeIndianPhone(doctorPhone);
-    if (!name) return setDoctorError("Please enter the doctor's name.");
-    if (!phone) return setDoctorError('Please enter a valid 10-digit Indian mobile number.');
-    const savedDoctor = { name, phone };
-    try {
-      await AsyncStorage.setItem(doctorStorageKey, JSON.stringify(savedDoctor));
-      setDoctor(savedDoctor);
-      setShowDoctorModal(false);
-    } catch (error) {
-      setDoctorError('Unable to save this doctor right now. Please try again.');
-    }
-  };
-
-  const handleRemoveDoctor = () => {
-    setShowRemoveDoctorModal(true);
-  };
-
-  const confirmRemoveDoctor = async () => {
-    try {
-      await AsyncStorage.removeItem(doctorStorageKey);
-      setDoctor(null);
-      setShowRemoveDoctorModal(false);
-    } catch (error) {
-      setShowRemoveDoctorModal(false);
-      Alert.alert('Remove Doctor', 'Unable to remove this doctor contact right now.');
-    }
-  };
-
-  const handleCallDoctor = async () => {
-    try {
-      if (!doctor || !(await callPhone(doctor.phone))) throw new Error('Unable to open dialer');
-    } catch (error) {
-      Alert.alert('Calling unavailable', 'Unable to open the phone dialer for this doctor.');
-    }
-  };
 
   const hasActivity = realRecentActivity && realRecentActivity.length > 0;
 
@@ -123,16 +46,8 @@ export default function PatientProgressScreen({ onBack }) {
     >
       <NoklaiHeader
         showBack
-        showRoleBadge={false}
         onBack={onBack || (() => setActiveCaregiverSubScreen(null))}
         title={`${activePatientName}'s Progress`}
-        rightAction={(
-          <CaregiverContactButton
-            doctor={doctor}
-            onAddDoctor={openDoctorForm}
-            onCallDoctor={handleCallDoctor}
-          />
-        )}
       />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -307,46 +222,6 @@ export default function PatientProgressScreen({ onBack }) {
           <ActivityHistoryScreen embedded onBack={() => setActiveTab('overview')} />
         )}
       </ScrollView>
-
-      <Modal visible={showDoctorModal} animationType="slide" transparent onRequestClose={() => setShowDoctorModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.doctorModal, { backgroundColor: isDarkMode ? '#1E232E' : '#FFFFFF' }]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary }]}>{doctor ? 'Edit Doctor' : 'Add Doctor'}</Text>
-              <TouchableOpacity onPress={() => setShowDoctorModal(false)} accessibilityLabel="Cancel doctor form"><Ionicons name="close-circle" size={26} color="#64748B" /></TouchableOpacity>
-            </View>
-            <Text style={[styles.formLabel, { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary }]}>Doctor's name</Text>
-            <TextInput value={doctorName} onChangeText={(value) => { setDoctorName(value); setDoctorError(''); }} placeholder="Enter doctor's name" placeholderTextColor="#94A3B8" style={[styles.formInput, { color: isDarkMode ? '#FFFFFF' : '#1E293B' }]} accessibilityLabel="Doctor's name" />
-            <Text style={[styles.formLabel, { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary }]}>Doctor's phone number</Text>
-            <TextInput value={doctorPhone} onChangeText={(value) => { setDoctorPhone(value); setDoctorError(''); }} placeholder="10-digit mobile number" placeholderTextColor="#94A3B8" keyboardType="phone-pad" style={[styles.formInput, { color: isDarkMode ? '#FFFFFF' : '#1E293B' }]} accessibilityLabel="Doctor's phone number" />
-            {!!doctorError && <Text style={styles.formError} accessibilityRole="alert">{doctorError}</Text>}
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.saveButton} onPress={handleSaveDoctor} accessibilityLabel="Save doctor"><Text style={styles.callDoctorText}>Save</Text></TouchableOpacity>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowDoctorModal(false)} accessibilityLabel="Cancel doctor form"><Text style={styles.cancelText}>Cancel</Text></TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={showRemoveDoctorModal} animationType="fade" transparent onRequestClose={() => setShowRemoveDoctorModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.doctorModal, { backgroundColor: isDarkMode ? '#1E232E' : '#FFFFFF' }]}>
-            <View style={styles.confirmationIconCircle}>
-              <Ionicons name="trash-outline" size={22} color="#DC2626" />
-            </View>
-            <Text style={[styles.modalTitle, styles.confirmationTitle, { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary }]}>Remove Doctor?</Text>
-            <Text style={[styles.confirmationMessage, { color: isDarkMode ? '#CBD5E1' : '#656F7D' }]}>This will remove the saved doctor contact from this patient’s profile.</Text>
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowRemoveDoctorModal(false)} accessibilityRole="button" accessibilityLabel="Cancel remove doctor">
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.removeButton} onPress={confirmRemoveDoctor} accessibilityRole="button" accessibilityLabel="Confirm remove doctor">
-                <Text style={styles.callDoctorText}>Remove</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -475,176 +350,5 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 4,
     backgroundColor: noklaiTheme.colors.primary,
-  },
-  doctorCard: {
-    borderRadius: noklaiTheme.radii.xl,
-    borderWidth: 1,
-    padding: 16,
-    marginTop: 14,
-  },
-  doctorHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  doctorIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#EFF6FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  doctorTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  doctorSub: {
-    fontSize: 12,
-    color: '#656F7D',
-    marginTop: 1,
-  },
-  savedDoctor: {
-    paddingLeft: 46,
-  },
-  doctorName: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  doctorPhone: {
-    fontSize: 14,
-    color: '#656F7D',
-    marginTop: 3,
-  },
-  doctorActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 12,
-  },
-  callDoctorButton: {
-    flex: 1,
-    minWidth: 140,
-    minHeight: 44,
-    borderRadius: 12,
-    backgroundColor: '#2563EB',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
-  callDoctorText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-    marginLeft: 7,
-  },
-  doctorSmallButton: {
-    minHeight: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E8EAE3',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-  },
-  doctorSmallText: {
-    color: '#2563EB',
-    fontSize: 13,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    padding: 16,
-  },
-  doctorModal: {
-    borderRadius: 20,
-    padding: 18,
-  },
-  confirmationIconCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: '#FEE2E2',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  confirmationTitle: {
-    marginBottom: 6,
-  },
-  confirmationMessage: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 18,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 18,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  formLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  formInput: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderColor: '#D8DEE8',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    fontSize: 15,
-    marginBottom: 14,
-  },
-  formError: {
-    color: '#DC2626',
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 6,
-  },
-  saveButton: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 12,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    minHeight: 44,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: '#E5E7EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelText: {
-    color: '#1E293B',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  removeButton: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 12,
-    backgroundColor: '#DC2626',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
