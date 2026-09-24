@@ -17,7 +17,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../supabaseClient.js';
 import { saveGameResult, getRemoteGameSessions } from '../database.js';
-import { calculateCVI, validateRoundResult, CVI_CONSTANTS } from './CognitiveVitalityIndex.js';
+import { calculateCVI, CVI_CONSTANTS } from './CognitiveVitalityIndex.js';
 
 const getStorage = () => {
   if (globalThis.AsyncStorage && typeof globalThis.AsyncStorage.getItem === 'function') return globalThis.AsyncStorage;

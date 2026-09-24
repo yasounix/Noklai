@@ -11,7 +11,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../../theme/noklaiTheme';
 import { useTheme } from '../../../context/ThemeContext';
-import { useLanguage } from '../../../context/LanguageContext';
 import { useNoklai } from '../../context/NoklaiContext';
 import NoklaiHeader from '../../components/NoklaiHeader';
 import QuoteCard from '../../components/QuoteCard';

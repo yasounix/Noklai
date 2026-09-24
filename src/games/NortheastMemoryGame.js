@@ -47,7 +47,7 @@ const isValidId = (str) => {
 
 // Dev-only logger to satisfy Task 7 (never logs in production)
 const logDev = (message, ...args) => {
-  if (typeof __DEV__ !== 'undefined' && __DEV__) {
+  if (__DEV__) {
     console.log(`[NorthEastMemory] ${message}`, ...args);
   }
 };

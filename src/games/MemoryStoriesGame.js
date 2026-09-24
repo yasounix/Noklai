@@ -15,7 +15,6 @@ import { usePatient } from '../context/PatientContext';
 import LanguageSelector from '../components/LanguageSelector';
 import {
   STORY_DATA,
-  STORY_QUESTIONS,
   TOTAL_QUESTIONS,
   LEVEL_METADATA,
   getQuestionsByDifficulty,

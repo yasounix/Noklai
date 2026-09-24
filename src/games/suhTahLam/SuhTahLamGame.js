@@ -40,7 +40,6 @@ import { SessionManager } from './engine/SessionManager';
 import { defaultSequenceManager } from './engine/SequenceManager';
 import { defaultDifficultyEngine } from './engine/DifficultyEngine';
 import { defaultLocalStorage } from './storage/LocalPerformanceStorage';
-import { cognitiveAnalytics } from '../../modules/performance';
 
 import SequencePlayer from './components/SequencePlayer';
 import QuestionView from './components/QuestionView';

@@ -5,7 +5,6 @@ import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { cognitiveAnalytics } from '../../modules/performance/CognitiveAnalyticsService';
 import {
-  getReminders,
   addReminder as dbAddReminder,
   updateReminder as dbUpdateReminder,
   toggleReminder as dbToggleReminder,
@@ -160,7 +159,20 @@ export function NoklaiProvider({ children }) {
         }
         if (savedPatientPhone) setPatientPhone(savedPatientPhone);
 
-        const isSetup = setupCompleted === 'true' || !!savedCaregiverName || !!existingPatientName;
+        let isSetup = setupCompleted === 'true' || !!savedCaregiverName || !!existingPatientName;
+        if (!isSetup) {
+          try {
+            const [legacySetup1, legacySetup2] = await AsyncStorage.multiGet([
+              '@noklai_patient_setup_completed',
+              '@noklai_setup_completed_v2',
+            ]);
+            if (legacySetup1?.[1] === 'true' || legacySetup2?.[1] === 'true') {
+              isSetup = true;
+              await AsyncStorage.setItem(STORAGE_KEYS.SETUP_COMPLETED, 'true');
+              await AsyncStorage.multiRemove(['@noklai_patient_setup_completed', '@noklai_setup_completed_v2']);
+            }
+          } catch (_) {}
+        }
         setHasCompletedSetup(isSetup);
 
         if (savedRole) setRole(savedRole);

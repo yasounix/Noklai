@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Replace with your actual values
-const supabaseUrl = 'https://gkaouygxlspirlsjorrm.supabase.co';  // Your project URL
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrYW91eWd4bHNwaXJsc2pvcnJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NDQ0MDMsImV4cCI6MjEwNDAyMDQwM30.I7KOrhrD-isEOsVUn4lvQ2oPnFPfNjm6dnPBvHIlYxI';  // Copy the FULL anon key
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -18,7 +18,9 @@ export async function testConnection() {
       console.error('Supabase connection error:', error);
       return false;
     }
-    console.log('Supabase connected successfully!', data);
+    if (__DEV__) {
+      console.log('Supabase connected successfully!', data);
+    }
     return true;
   } catch (err) {
     console.error('Connection failed:', err);

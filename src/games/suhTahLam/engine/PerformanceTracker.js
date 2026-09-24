@@ -13,9 +13,8 @@
  */
 
 import { CognitiveProfile } from './CognitiveProfile.js';
-import { DifficultyEngine, defaultDifficultyEngine } from './DifficultyEngine.js';
-import { LocalPerformanceStorage, defaultLocalStorage } from '../storage/LocalPerformanceStorage.js';
-import { validateRoundResult } from './CognitiveVitalityIndex.js';
+import { defaultDifficultyEngine } from './DifficultyEngine.js';
+import { defaultLocalStorage } from '../storage/LocalPerformanceStorage.js';
 import { cognitiveAnalytics } from '../../../modules/performance/CognitiveAnalyticsService.js';
 
 export class PerformanceTracker {

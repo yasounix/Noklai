@@ -18,7 +18,6 @@ import { useLanguage } from '../../../context/LanguageContext';
 import { useNoklai } from '../../context/NoklaiContext';
 import NoklaiCard from '../../components/NoklaiCard';
 import QuoteCard from '../../components/QuoteCard';
-import AIButton from '../../components/AIButton';
 import NoklaiButton from '../../components/NoklaiButton';
 import {
   REMINDER_CATEGORIES,
