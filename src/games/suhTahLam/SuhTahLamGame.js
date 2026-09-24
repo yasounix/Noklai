@@ -19,19 +19,20 @@
  * - Offline-first persistence via LocalPerformanceStorage
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { usePatient } from '../../context/PatientContext';
 import LanguageSelector from '../../components/LanguageSelector';
 
 import { PerformanceTracker } from './engine/PerformanceTracker';
@@ -39,12 +40,14 @@ import { SessionManager } from './engine/SessionManager';
 import { defaultSequenceManager } from './engine/SequenceManager';
 import { defaultDifficultyEngine } from './engine/DifficultyEngine';
 import { defaultLocalStorage } from './storage/LocalPerformanceStorage';
+import { cognitiveAnalytics } from '../../modules/performance';
 
 import SequencePlayer from './components/SequencePlayer';
 import QuestionView from './components/QuestionView';
 import RecallGrid from './components/RecallGrid';
 import ChangeDetectionView from './components/ChangeDetectionView';
 import SequenceReconstructView from './components/SequenceReconstructView';
+import { SuhTahLamAudioEngine } from './audio/SuhTahLamAudioEngine';
 
 export const GAME_STEPS = {
   START: 'START',
@@ -56,9 +59,12 @@ export const GAME_STEPS = {
   RESULT: 'RESULT',
 };
 
-export default function SuhTahLamGame({ onExit }) {
+export default function SuhTahLamGame({ onExit, patientId: propPatientId }) {
   const { theme, isDarkMode } = useTheme();
   const { t, currentLanguage } = useLanguage();
+  const { currentPatientId, patientId } = usePatient?.() || {};
+  // Safe fallback to P001 only if context is unconfigured
+  const effectivePlayerId = propPatientId || patientId || currentPatientId || 'P001';
 
   const [currentStep, setCurrentStep] = useState(GAME_STEPS.START);
   const [currentDifficulty, setCurrentDifficulty] = useState('easy');
@@ -69,32 +75,43 @@ export default function SuhTahLamGame({ onExit }) {
 
   const trackerRef = useRef(null);
   const sessionManagerRef = useRef(new SessionManager());
+  const audioEngineRef = useRef(null);
+
+  if (!audioEngineRef.current) {
+    audioEngineRef.current = new SuhTahLamAudioEngine();
+  }
+
+  const playBambooTapSound = useCallback(() => {
+    if (!soundEnabled) return;
+    audioEngineRef.current?.playBambooClack();
+  }, [soundEnabled]);
 
   useEffect(() => {
     const init = async () => {
       const tracker = new PerformanceTracker({
         gameId: 'suh_tah_lam',
-        playerId: 'P001',
+        playerId: effectivePlayerId,
         difficultyEngine: defaultDifficultyEngine,
         storage: defaultLocalStorage,
       });
 
-      const { currentDifficulty: diff } = await tracker.initialize();
+      const { currentDifficulty: diff } = await tracker.initialize({ playerId: effectivePlayerId });
       trackerRef.current = tracker;
       setCurrentDifficulty(diff || 'easy');
-      sessionManagerRef.current.startSession({ initialDifficulty: diff });
+      sessionManagerRef.current.startSession({ playerId: effectivePlayerId, initialDifficulty: diff });
       setIsInitializing(false);
     };
 
     init();
 
     return () => {
+      audioEngineRef.current?.stopAll();
       if (trackerRef.current) {
         trackerRef.current.abandonRound();
       }
       sessionManagerRef.current.endSession();
     };
-  }, []);
+  }, [effectivePlayerId]);
 
   const startNewRound = () => {
     const sequence = defaultSequenceManager.getNextSequence(currentDifficulty);
@@ -103,10 +120,17 @@ export default function SuhTahLamGame({ onExit }) {
     setActiveSequence(sequence);
     setActiveQuestion(question);
 
+    audioEngineRef.current?.stopAmbientDrone();
+    if (soundEnabled) {
+      audioEngineRef.current?.startFluteMelody();
+    }
+
     if (trackerRef.current) {
+      const currentSession = sessionManagerRef.current.getSession();
       trackerRef.current.startRound({
         difficulty: currentDifficulty,
         sequenceId: sequence.id,
+        sessionId: currentSession?.id || null,
       });
     }
 
@@ -117,11 +141,23 @@ export default function SuhTahLamGame({ onExit }) {
     if (trackerRef.current) {
       trackerRef.current.recordRecallStart();
     }
+    audioEngineRef.current?.stopFluteMelody();
+    if (soundEnabled) {
+      audioEngineRef.current?.startAmbientDrone();
+    }
     // Proceed to Question Recall
     setCurrentStep(GAME_STEPS.QUESTION);
   };
 
   const handleQuestionAnswered = (chosenOption, isCorrect) => {
+    if (soundEnabled) {
+      if (isCorrect) {
+        audioEngineRef.current?.playCelebrationChime?.();
+      } else {
+        audioEngineRef.current?.playGentleEncouragement?.();
+      }
+    }
+
     if (trackerRef.current && activeQuestion) {
       trackerRef.current.recordAnswer({
         domain: activeQuestion.domain || 'sequence',
@@ -139,6 +175,14 @@ export default function SuhTahLamGame({ onExit }) {
   };
 
   const handleGridCompleted = ({ chosenPath, correctPath, isCorrect }) => {
+    if (soundEnabled) {
+      if (isCorrect) {
+        audioEngineRef.current?.playCelebrationChime?.();
+      } else {
+        audioEngineRef.current?.playGentleEncouragement?.();
+      }
+    }
+
     if (trackerRef.current) {
       trackerRef.current.recordAnswer({
         domain: 'spatial',
@@ -155,6 +199,14 @@ export default function SuhTahLamGame({ onExit }) {
   };
 
   const handleChangeDetected = ({ chosenOption, correctOption, isCorrect }) => {
+    if (soundEnabled) {
+      if (isCorrect) {
+        audioEngineRef.current?.playCelebrationChime?.();
+      } else {
+        audioEngineRef.current?.playGentleEncouragement?.();
+      }
+    }
+
     if (trackerRef.current) {
       trackerRef.current.recordAnswer({
         domain: 'change',
@@ -176,6 +228,14 @@ export default function SuhTahLamGame({ onExit }) {
   };
 
   const handleReconstructCompleted = ({ chosenSequence, correctSequence, isCorrect }) => {
+    if (soundEnabled) {
+      if (isCorrect) {
+        audioEngineRef.current?.playCelebrationChime?.();
+      } else {
+        audioEngineRef.current?.playGentleEncouragement?.();
+      }
+    }
+
     if (trackerRef.current) {
       trackerRef.current.recordAnswer({
         domain: 'sequence',
@@ -192,11 +252,19 @@ export default function SuhTahLamGame({ onExit }) {
   };
 
   const finishRound = async () => {
+    audioEngineRef.current?.stopAmbientDrone();
+    audioEngineRef.current?.stopFluteMelody();
+    if (soundEnabled) {
+      audioEngineRef.current?.playCelebrationChime?.();
+    }
+
     if (trackerRef.current) {
       const result = await trackerRef.current.completeRound();
       if (result?.decision?.nextDifficulty) {
         setCurrentDifficulty(result.decision.nextDifficulty);
       }
+      // Note: trackerRef.current.completeRound() already persisted and recorded
+      // the completed round into cognitiveAnalytics with verified gameplay metrics.
     }
     sessionManagerRef.current.recordRoundCompleted();
     setCurrentStep(GAME_STEPS.RESULT);
@@ -224,7 +292,11 @@ export default function SuhTahLamGame({ onExit }) {
           <LanguageSelector compact={true} />
           <TouchableOpacity
             style={[styles.soundBtn, { marginLeft: 6 }]}
-            onPress={() => setSoundEnabled(!soundEnabled)}
+            onPress={() => {
+              const nextState = !soundEnabled;
+              setSoundEnabled(nextState);
+              audioEngineRef.current?.setMuted(!nextState);
+            }}
             accessibilityRole="button"
             accessibilityLabel={soundEnabled ? 'Mute sound' : 'Unmute sound'}
           >
@@ -302,6 +374,7 @@ export default function SuhTahLamGame({ onExit }) {
             isDarkMode={isDarkMode}
             soundEnabled={soundEnabled}
             onComplete={handleObserveFinished}
+            onBambooClack={playBambooTapSound}
             t={t}
           />
         )}

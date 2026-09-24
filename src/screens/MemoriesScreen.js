@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, FlatList, Image, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { Text, View, FlatList, Image, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { usePatient } from '../context/PatientContext';
 import { useTheme } from '../context/ThemeContext';
@@ -18,13 +19,11 @@ export default function MemoriesScreen() {
   const loadFamily = async () => {
     try {
       setLoading(true);
-      console.log(`MemoriesScreen: patientId = ${patientId}`);
       if (!patientId) {
         setFamily([]);
         return;
       }
       const data = await getFamilyMembers(patientId);
-      console.log(`MemoriesScreen: family =`, data);
       setFamily(data || []);
     } catch (error) {
       console.error('MemoriesScreen: Error fetching family:', error);
@@ -78,6 +77,7 @@ export default function MemoriesScreen() {
         <FlatList
           data={familyList}
           keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+          keyExtractor={(item, index) => item.id?.toString() || `family_${index}`}
           contentContainerStyle={{ paddingBottom: 30 }}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (

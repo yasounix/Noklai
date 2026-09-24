@@ -7,9 +7,9 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
-  SafeAreaView,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { usePatient } from '../context/PatientContext';
@@ -21,6 +21,7 @@ import {
   recordPerformance,
 } from '../modules/database';
 import { supabase } from '../modules/supabaseClient';
+import { cognitiveAnalytics, defaultLocalStorage } from '../modules/performance';
 
 /* -------------------------------------------------------------
    Security, Sanitization & Dev Logging Helpers
@@ -147,6 +148,7 @@ export default function NortheastMemoryGame({
   onFinish,
   onComplete,
   onExit,
+  patientId: propPatientId,
 }) {
   const { theme } = useTheme();
   const { t } = useLanguage();
@@ -156,10 +158,11 @@ export default function NortheastMemoryGame({
     if (lvl === 'Medium') return t('games.northeastGame.mediumLabel') || 'Medium (20s)';
     return t('games.northeastGame.hardLabel') || 'Hard (10s)';
   };
-  const { patientId } = usePatient();
+  const { patientId } = usePatient?.() || {};
 
   // Validate patientId - fallback to P001 for seamless play
-  const activePatientId = patientId && isValidId(patientId) ? patientId : 'P001';
+  const candidateId = propPatientId || patientId;
+  const activePatientId = candidateId && isValidId(candidateId) ? candidateId : 'P001';
 
   const handleExit = useCallback(() => {
     onExit?.();
@@ -408,14 +411,14 @@ export default function NortheastMemoryGame({
         is_correct: isCorrect,
         response_time: responseTimeSec,
         difficulty: difficulty,
-        game_name: 'North East Memory',
+        game_name: 'Sinaki Sthan',
       });
     } catch (recordErr) {
       errorDev('ERROR in recordPerformance:', recordErr);
     }
 
     // Show feedback for 1.5s, then advance
-    feedbackTimeoutRef.current = setTimeout(() => {
+    feedbackTimeoutRef.current = setTimeout(async () => {
       isSubmittingRef.current = false;
       const nextIndex = currentQuestionIndex + 1;
 
@@ -428,6 +431,67 @@ export default function NortheastMemoryGame({
         setScenesCompleted((prev) => prev + 1);
         logDev('Round complete! Moving to round-complete state.');
         setGameState('round-complete');
+
+        const totalAttempts = questions.length;
+        const totalCorrect = roundScore + (isCorrect ? 1 : 0);
+        const actualDurationSec = sceneStartTime ? Math.max(1, Math.round((Date.now() - sceneStartTime) / 1000)) : 0;
+        const sessionId = `nem_sess_${activePatientId}_${Date.now()}`;
+        const roundAccuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : null;
+        const isEligible = totalAttempts > 0 && activePatientId;
+
+        // 1. Save to centralized LocalPerformanceStorage
+        if (activePatientId) {
+          try {
+            await defaultLocalStorage.saveRoundResult({
+              session: {
+                id: sessionId,
+                playerId: activePatientId,
+                gameId: 'northeast_memory',
+              },
+              roundData: {
+                gameId: 'northeast_memory',
+                playerId: activePatientId,
+                sessionId,
+                roundNumber: scenesCompleted + 1,
+                status: 'completed',
+                difficulty,
+                attempts: totalAttempts,
+                correctAttempts: totalCorrect,
+                accuracy: totalAttempts > 0 ? totalCorrect / totalAttempts : 0,
+                durationSec: actualDurationSec,
+                startedAt: new Date(sceneStartTime || Date.now()).toISOString(),
+                completedAt: new Date().toISOString(),
+                eligibleForCVI: isEligible,
+              },
+            });
+          } catch (err) {
+            console.warn('[NortheastMemoryGame] LocalPerformanceStorage save notice:', err?.message);
+          }
+        }
+
+        // 2. Record in unified caregiver cognitive analytics service
+        try {
+          await cognitiveAnalytics.recordGameSession({
+            gameId: 'northeast_memory',
+            gameName: 'Sinaki Sthan',
+            domain: 'episodic_recall',
+            difficulty: difficulty,
+            durationSec: actualDurationSec,
+            questionsTotal: totalAttempts,
+            questionsCorrect: totalCorrect,
+            accuracy: roundAccuracy,
+            responseTimeSec: typeof responseTimeSec === 'number' && responseTimeSec > 0 ? responseTimeSec : null,
+            score: totalCorrect * 10,
+            patientId: activePatientId,
+            metadata: {
+              sessionId,
+              roundNumber: scenesCompleted + 1,
+              eligibleForCVI: isEligible,
+            },
+          });
+        } catch (e) {
+          console.error('[NortheastMemoryGame] Exception recording session:', e);
+        }
       }
     }, 1500);
   };
@@ -527,7 +591,7 @@ export default function NortheastMemoryGame({
 
           <View style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder, marginTop: 12 }]}>
             <Text style={[styles.largeTitle, { color: theme.text }]}>
-              {t('games.northeastGame.title') || '🏞️ North East Memory'}
+              {t('games.northeastGame.title') || '🏞️ Sinaki Sthan'}
             </Text>
             <Text style={[styles.bodyText, { color: theme.subText, marginTop: 12 }]}>
               {t('games.northeastGame.desc') || 'Look at the photo carefully. Then answer questions about what you saw.'}

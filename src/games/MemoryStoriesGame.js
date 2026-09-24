@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,12 @@ import {
   ScrollView,
   StyleSheet,
   Modal,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { usePatient } from '../context/PatientContext';
 import LanguageSelector from '../components/LanguageSelector';
 import {
   STORY_DATA,
@@ -19,6 +20,8 @@ import {
   LEVEL_METADATA,
   getQuestionsByDifficulty,
 } from '../modules/storyGameData';
+import { cognitiveAnalytics, defaultLocalStorage } from '../modules/performance';
+import Realistic3DStoryBook from './memorystories/components/Realistic3DStoryBook';
 
 const SCREENS = {
   STORY: 'story',
@@ -27,9 +30,11 @@ const SCREENS = {
   COMPLETE: 'complete',
 };
 
-export default function MemoryStoriesGame({ onExit }) {
+export default function MemoryStoriesGame({ onExit, patientId: propPatientId }) {
   const { theme, isDarkMode } = useTheme();
   const { t, currentLanguage } = useLanguage();
+  const { patientId: contextPatientId } = usePatient?.() || {};
+  const activePatientId = propPatientId || contextPatientId || 'P001';
 
   // Screen flow state
   const [screen, setScreen] = useState(SCREENS.STORY);
@@ -37,6 +42,10 @@ export default function MemoryStoriesGame({ onExit }) {
   // Difficulty & progress state
   const [currentTier, setCurrentTier] = useState('easy'); // 'easy' | 'medium' | 'hard'
   const [tierQuestionIndex, setTierQuestionIndex] = useState(0); // index inside current tier
+  const tierStartTimeRef = useRef(Date.now());
+  const sessionIdRef = useRef(`stories_sess_${Date.now()}`);
+  const questionStartTimeRef = useRef(Date.now());
+  const responseTimesRef = useRef([]);
   const [unlockedTiers, setUnlockedTiers] = useState({
     easy: true,
     medium: false,
@@ -86,6 +95,9 @@ export default function MemoryStoriesGame({ onExit }) {
         return;
       }
 
+      const elapsedSec = Math.max(0.2, (Date.now() - questionStartTimeRef.current) / 1000);
+      responseTimesRef.current.push(elapsedSec);
+
       setSelectedChoice(choiceIndex);
       const isCorrect = choiceIndex === currentQuestion.correctIndex;
       setIsAnswerCorrect(isCorrect);
@@ -102,18 +114,85 @@ export default function MemoryStoriesGame({ onExit }) {
   );
 
   // Proceed to next question or trigger level unlock / game complete
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     const nextIdx = tierQuestionIndex + 1;
 
     // Reset answering state for next question
     setSelectedChoice(null);
     setIsAnswerCorrect(null);
+    questionStartTimeRef.current = Date.now();
 
     if (nextIdx < currentTierQuestions.length) {
       // More questions in current tier
       setTierQuestionIndex(nextIdx);
     } else {
       // Completed all questions in current tier!
+      const totalAttempts = currentTierQuestions.length;
+      const totalCorrect = answeredQuestionIds.size;
+      const actualDurationSec = Math.max(1, Math.round((Date.now() - tierStartTimeRef.current) / 1000));
+      const playerId = activePatientId || 'P001';
+      const sessionId = sessionIdRef.current;
+      const isEligible = totalAttempts > 0;
+
+      // Authentic average response time across questions
+      const validRts = responseTimesRef.current;
+      const avgResponseTimeSec = validRts.length > 0
+        ? Math.round((validRts.reduce((a, b) => a + b, 0) / validRts.length) * 10) / 10
+        : null;
+
+      // 1. Save to centralized LocalPerformanceStorage
+      try {
+        await defaultLocalStorage.saveRoundResult({
+          session: {
+            id: sessionId,
+            playerId,
+            gameId: 'memory_stories',
+          },
+          roundData: {
+            gameId: 'memory_stories',
+            playerId,
+            sessionId,
+            roundNumber: 1,
+            status: 'completed',
+            difficulty: currentTier,
+            attempts: totalAttempts,
+            correctAttempts: totalCorrect,
+            accuracy: totalAttempts > 0 ? totalCorrect / totalAttempts : 0,
+            durationSec: actualDurationSec,
+            responseTimeMs: avgResponseTimeSec ? Math.round(avgResponseTimeSec * 1000) : null,
+            startedAt: new Date(tierStartTimeRef.current).toISOString(),
+            completedAt: new Date().toISOString(),
+            eligibleForCVI: isEligible,
+          },
+        });
+      } catch (err) {
+        console.warn('[MemoryStoriesGame] LocalPerformanceStorage save notice:', err?.message);
+      }
+
+      // 2. Record in unified caregiver cognitive analytics service
+      try {
+        await cognitiveAnalytics.recordGameSession({
+          gameId: 'memory_stories',
+          gameName: 'Xuworoni Kotha',
+          domain: 'episodic_recall',
+          difficulty: currentTier,
+          durationSec: actualDurationSec,
+          questionsTotal: totalAttempts,
+          questionsCorrect: totalCorrect,
+          accuracy: totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : null,
+          responseTimeSec: avgResponseTimeSec,
+          score: totalCorrect * 10,
+          patientId: playerId,
+          metadata: {
+            sessionId,
+            roundNumber: 1,
+            eligibleForCVI: isEligible,
+          },
+        });
+      } catch (e) {
+        console.error('[MemoryStoriesGame] Exception recording session:', e);
+      }
+
       if (currentTier === 'easy') {
         setUnlockedTiers((prev) => ({ ...prev, medium: true }));
         setScreen(SCREENS.LEVEL_UNLOCKED);
@@ -124,10 +203,11 @@ export default function MemoryStoriesGame({ onExit }) {
         setScreen(SCREENS.COMPLETE);
       }
     }
-  }, [tierQuestionIndex, currentTierQuestions.length, currentTier]);
+  }, [tierQuestionIndex, currentTierQuestions.length, currentTier, answeredQuestionIds, activePatientId]);
 
   // Handle continuing to the next tier from the level unlock milestone screen
   const handleContinueNextTier = useCallback(() => {
+    tierStartTimeRef.current = Date.now();
     if (currentTier === 'easy') {
       setCurrentTier('medium');
       setTierQuestionIndex(0);
@@ -275,66 +355,16 @@ export default function MemoryStoriesGame({ onExit }) {
             </Text>
           </View>
 
-          {/* Story Card */}
-          <View
-            style={[
-              styles.storyCard,
-              { backgroundColor: colors.cardBg, borderColor: colors.cardBorder },
-            ]}
-            accessibilityRole="text"
-            accessibilityLabel={t('games.memoryStories.accessibility.storyCard')}
-          >
-            <View style={styles.storyCardHeader}>
-              <Ionicons
-                name="sunny-outline"
-                size={26}
-                color="#D97706"
-                style={{ marginRight: 10 }}
-              />
-              <Text style={[styles.storyTitle, { color: colors.text }]}>
-                {t(STORY_DATA.titleKey)}
-              </Text>
-            </View>
-
-            <Text style={[styles.storyParagraph, { color: colors.text }]}>
-              {t(STORY_DATA.paragraph1Key)}
-            </Text>
-
-            <Text style={[styles.storyParagraph, { color: colors.text, marginTop: 14 }]}>
-              {t(STORY_DATA.paragraph2Key)}
-            </Text>
-          </View>
-
-          {/* Gentle Instruction Prompt */}
-          <View
-            style={[
-              styles.promptBox,
-              { backgroundColor: isDarkMode ? '#1F2937' : '#F9FAFB' },
-            ]}
-          >
-            <Ionicons
-              name="bulb-outline"
-              size={24}
-              color={colors.primary}
-              style={{ marginRight: 10 }}
-            />
-            <Text style={[styles.promptText, { color: colors.subText }]}>
-              {t('games.memoryStories.readStoryPrompt')}
-            </Text>
-          </View>
-
-          {/* Start Questions Button */}
-          <TouchableOpacity
-            style={[styles.largePrimaryBtn, { backgroundColor: colors.primary }]}
-            onPress={() => setScreen(SCREENS.QUESTION)}
-            accessibilityRole="button"
-            accessibilityLabel={t('games.memoryStories.startQuestions')}
-          >
-            <Text style={styles.largePrimaryBtnText}>
-              {t('games.memoryStories.startQuestions')}
-            </Text>
-            <Ionicons name="arrow-forward" size={24} color="#FFFFFF" style={{ marginLeft: 10 }} />
-          </TouchableOpacity>
+          {/* Realistic Handmade Cultural Storybook */}
+          <Realistic3DStoryBook
+            title={t(STORY_DATA.titleKey)}
+            paragraph1={t(STORY_DATA.paragraph1Key)}
+            paragraph2={t(STORY_DATA.paragraph2Key)}
+            isDarkMode={isDarkMode}
+            onStartQuestions={() => setScreen(SCREENS.QUESTION)}
+            startQuestionsLabel={t('games.memoryStories.startQuestions')}
+            promptLabel={t('games.memoryStories.readStoryPrompt')}
+          />
         </ScrollView>
       </SafeAreaView>
     );
@@ -766,43 +796,16 @@ export default function MemoryStoriesGame({ onExit }) {
           </View>
 
           <ScrollView contentContainerStyle={styles.scrollContent}>
-            <View
-              style={[
-                styles.storyCard,
-                { backgroundColor: colors.cardBg, borderColor: colors.cardBorder },
-              ]}
-            >
-              <View style={styles.storyCardHeader}>
-                <Ionicons
-                  name="book"
-                  size={26}
-                  color={colors.primary}
-                  style={{ marginRight: 10 }}
-                />
-                <Text style={[styles.storyTitle, { color: colors.text }]}>
-                  {t(STORY_DATA.titleKey)}
-                </Text>
-              </View>
-
-              <Text style={[styles.storyParagraph, { color: colors.text }]}>
-                {t(STORY_DATA.paragraph1Key)}
-              </Text>
-
-              <Text style={[styles.storyParagraph, { color: colors.text, marginTop: 14 }]}>
-                {t(STORY_DATA.paragraph2Key)}
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.largePrimaryBtn, { backgroundColor: colors.primary, marginTop: 24 }]}
-              onPress={() => setShowStoryModal(false)}
-              accessibilityRole="button"
-              accessibilityLabel={t('games.memoryStories.accessibility.closeStoryBtn')}
-            >
-              <Text style={styles.largePrimaryBtnText}>
-                {t('games.memoryStories.closeStory')}
-              </Text>
-            </TouchableOpacity>
+            <Realistic3DStoryBook
+              title={t(STORY_DATA.titleKey)}
+              paragraph1={t(STORY_DATA.paragraph1Key)}
+              paragraph2={t(STORY_DATA.paragraph2Key)}
+              isDarkMode={isDarkMode}
+              initialOpen={true}
+              onStartQuestions={() => setShowStoryModal(false)}
+              startQuestionsLabel={t('games.memoryStories.closeStory', 'Back to Question')}
+              promptLabel=""
+            />
           </ScrollView>
         </SafeAreaView>
       </Modal>

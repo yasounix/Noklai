@@ -6,15 +6,20 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { usePatient } from '../context/PatientContext';
+import { useLanguage } from '../context/LanguageContext';
+import { getAIResponseAsync, getAIResponse } from '../modules/aiData';
 
 export default function AIScreen() {
   const { theme } = useTheme();
+  const { patientId, patientName, caregiverName } = usePatient?.() || {};
+  const { currentLanguage } = useLanguage?.() || {};
 
   const [messages, setMessages] = useState([
     {
@@ -25,9 +30,10 @@ export default function AIScreen() {
   ]);
 
   const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading) return;
 
     const userMessage = {
       id: Date.now().toString(),
@@ -35,19 +41,49 @@ export default function AIScreen() {
       text: input.trim(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setInput('');
+    setIsLoading(true);
 
-    // Temporary AI response
-    setTimeout(() => {
+    const priorHistory = messages.map(m => ({
+      sender: m.sender,
+      text: m.text,
+    }));
+
+    try {
+      const result = await getAIResponseAsync(
+        userMessage.text,
+        {
+          patientId: patientId || 'P001',
+          patientName,
+          caregiverName,
+          language: currentLanguage,
+        },
+        priorHistory
+      );
+
+      const replyText = result.success && result.text
+        ? result.text
+        : result.fallback || 'I am here with you. How can I assist you?';
+
       const aiMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
-        text: 'Thank you for your message. I am still learning!',
+        text: replyText,
       };
 
       setMessages(prev => [...prev, aiMessage]);
-    }, 700);
+    } catch (err) {
+      const aiMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: 'ai',
+        text: 'I am here with you. How can I assist you?',
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderMessage = ({ item }) => {
