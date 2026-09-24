@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../../theme/noklaiTheme';
 import { useTheme } from '../../../context/ThemeContext';
+import { useLanguage } from '../../../context/LanguageContext';
 import { useNoklai } from '../../context/NoklaiContext';
 import QuoteCard from '../../components/QuoteCard';
 import NoklaiButton from '../../components/NoklaiButton';
@@ -19,6 +20,7 @@ import NoklaiHeader from '../../components/NoklaiHeader';
 
 export default function LinkedPatientsScreen({ onBack, onSelectPatient }) {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
   const {
     patients,
     activePatientId,
@@ -98,7 +100,7 @@ export default function LinkedPatientsScreen({ onBack, onSelectPatient }) {
       <NoklaiHeader
         showBack
         onBack={onBack || (() => setActiveCaregiverSubScreen(null))}
-        title="Your Loved Ones"
+        title={t('noklai.caregiverHome.lovedOnesTitle', 'Your Loved Ones')}
       />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -109,7 +111,7 @@ export default function LinkedPatientsScreen({ onBack, onSelectPatient }) {
               { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
             ]}
           >
-            Your Loved Ones
+            {t('noklai.caregiverHome.lovedOnesTitle', 'Your Loved Ones')}
           </Text>
           <Text
             style={[
@@ -117,7 +119,7 @@ export default function LinkedPatientsScreen({ onBack, onSelectPatient }) {
               { color: isDarkMode ? noklaiTheme.colors.textSecondaryDark : noklaiTheme.colors.textSecondary },
             ]}
           >
-            People you are supporting
+            {t('noklai.caregiverHome.lovedOnesSubtitle', 'People you are supporting')}
           </Text>
         </View>
 
@@ -160,7 +162,7 @@ export default function LinkedPatientsScreen({ onBack, onSelectPatient }) {
                     </Text>
                     {isSelected && (
                       <View style={styles.activeTag}>
-                        <Text style={styles.activeTagText}>Active</Text>
+                        <Text style={styles.activeTagText}>{t('noklai.caregiverHome.activeStatus', 'Active')}</Text>
                       </View>
                     )}
                   </View>
@@ -204,7 +206,7 @@ export default function LinkedPatientsScreen({ onBack, onSelectPatient }) {
           >
             <Ionicons name="link" size={18} color="#16A34A" style={{ marginRight: 6 }} />
             <Text style={[styles.actionBtnText, { color: '#16A34A' }]}>
-              Link by Code
+              {t('noklai.caregiverHome.linkByCode', 'Link by Code')}
             </Text>
           </TouchableOpacity>
 
@@ -222,15 +224,15 @@ export default function LinkedPatientsScreen({ onBack, onSelectPatient }) {
           >
             <Ionicons name="add" size={18} color={noklaiTheme.colors.primary} style={{ marginRight: 6 }} />
             <Text style={[styles.actionBtnText, { color: noklaiTheme.colors.primary }]}>
-              Add Profile
+              {t('noklai.caregiverHome.addLovedOne', 'Add Profile')}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Quote Card (Screen 5 in reference design) */}
         <QuoteCard
-          quote="Care is a journey we walk together."
-          author="Family Support"
+          quote={t('noklai.caregiverHome.quoteText', 'Care is a journey we walk together.')}
+          author={t('noklai.caregiverHome.quoteAuthor', 'Family Support')}
         />
 
         {/* Link Patient by Code Modal */}

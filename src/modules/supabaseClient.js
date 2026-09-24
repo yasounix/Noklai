@@ -1,8 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const supabaseUrl = 'https://gkaouygxlspirlsjorrm.supabase.co';
-export const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrYW91eWd4bHNwaXJsc2pvcnJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NDQ0MDMsImV4cCI6MjEwNDAyMDQwM30.I7KOrhrD-isEOsVUn4lvQ2oPnFPfNjm6dnPBvHIlYxI';
+export const supabaseUrl =
+  process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://gkaouygxlspirlsjorrm.supabase.co';
+export const supabaseAnonKey =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrYW91eWd4bHNwaXJsc2pvcnJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NDQ0MDMsImV4cCI6MjEwNDAyMDQwM30.I7KOrhrD-isEOsVUn4lvQ2oPnFPfNjm6dnPBvHIlYxI';
 
 // Safe cross-platform storage adapter (supports React Native runtime & Node test environments)
 const authStorage = {
@@ -62,6 +65,9 @@ export async function testConnection() {
     
     if (error && error.code !== 'PGRST116') {
       console.log('Supabase connection test note:', error.message);
+    }
+    if (__DEV__) {
+      console.log('Supabase connected successfully!', data);
     }
     return true;
   } catch (err) {

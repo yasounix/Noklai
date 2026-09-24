@@ -10,11 +10,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../../theme/noklaiTheme';
 import { useTheme } from '../../../context/ThemeContext';
+import { useLanguage } from '../../../context/LanguageContext';
 import { useNoklai } from '../../context/NoklaiContext';
 import NoklaiHeader from '../../components/NoklaiHeader';
 
 export default function GamePerformanceScreen({ onBack, embedded = false }) {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
   const { activePatientName, setActiveCaregiverSubScreen, realGamePerformance } = useNoklai();
 
   const [expandedGame, setExpandedGame] = useState(null);
@@ -33,7 +35,7 @@ export default function GamePerformanceScreen({ onBack, embedded = false }) {
               { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
             ]}
           >
-            Game Performance
+            {t('noklai.progress.gamePerformanceTitle', 'Game Performance')}
           </Text>
           <Text
             style={[
@@ -41,125 +43,163 @@ export default function GamePerformanceScreen({ onBack, embedded = false }) {
               { color: isDarkMode ? noklaiTheme.colors.textSecondaryDark : noklaiTheme.colors.textSecondary },
             ]}
           >
-            {activePatientName}&apos;s verified performance in each game
+            {t('noklai.progress.gamePerformanceSub', "%{name}'s verified performance in each game", { name: activePatientName })}
           </Text>
         </View>
       )}
 
       {/* Games List - REAL DATA */}
-      <View style={styles.gamesList}>
-        {realGamePerformance.map((game) => {
-          const isExpanded = expandedGame === game.id;
-          const hasScore = typeof game.score === 'number';
-          const scoreNum = hasScore ? Math.round(game.score) : null;
-          const isHigh = hasScore && scoreNum >= 75;
+      {realGamePerformance && realGamePerformance.length > 0 ? (
+        <View style={styles.gamesList}>
+          {realGamePerformance.map((game) => {
+            const isExpanded = expandedGame === game.id;
+            const hasScore = typeof game.score === 'number';
+            const scoreNum = hasScore ? Math.round(game.score) : null;
+            const isHigh = hasScore && scoreNum >= 75;
 
-          return (
-            <TouchableOpacity
-              key={game.id}
-              activeOpacity={0.85}
-              onPress={() => toggleExpand(game.id)}
-              style={[
-                styles.gameCard,
-                {
-                  backgroundColor: isDarkMode ? '#1E232E' : '#FFFFFF',
-                  borderColor: isDarkMode ? '#2D3545' : '#E8EAE3',
-                },
-                !isDarkMode && noklaiTheme.shadows.card,
-              ]}
-            >
-              <View style={styles.gameMainRow}>
-                <View
-                  style={[
-                    styles.gameIconBox,
-                    {
-                      backgroundColor: hasScore
-                        ? isHigh
-                          ? isDarkMode ? '#1C3322' : '#DCFCE7'
-                          : isDarkMode ? '#3D2814' : '#FEF3C7'
-                        : isDarkMode ? '#262D3B' : '#F1F3EE',
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name={game.icon}
-                    size={22}
-                    color={hasScore ? (isHigh ? '#16A34A' : '#D97706') : '#9CA3AF'}
-                  />
-                </View>
-
-                <View style={styles.gameTitleCol}>
-                  <Text
+            return (
+              <TouchableOpacity
+                key={game.id}
+                activeOpacity={0.85}
+                onPress={() => toggleExpand(game.id)}
+                style={[
+                  styles.gameCard,
+                  {
+                    backgroundColor: isDarkMode ? '#1E232E' : '#FFFFFF',
+                    borderColor: isDarkMode ? '#2D3545' : '#E8EAE3',
+                  },
+                  !isDarkMode && noklaiTheme.shadows.card,
+                ]}
+              >
+                <View style={styles.gameMainRow}>
+                  <View
                     style={[
-                      styles.gameTitle,
-                      { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
-                    ]}
-                  >
-                    {game.name}
-                  </Text>
-                  <Text style={styles.gameCategoryText}>{game.category}</Text>
-                </View>
-
-                <View style={styles.scoreRow}>
-                  <Text
-                    style={[
-                      styles.scoreNumber,
+                      styles.gameIconBox,
                       {
-                        color: hasScore
+                        backgroundColor: hasScore
                           ? isHigh
-                            ? '#16A34A'
-                            : '#D97706'
-                          : isDarkMode
-                          ? '#9CA3AF'
-                          : '#656F7D',
-                        fontSize: hasScore ? 18 : 13,
-                        fontWeight: hasScore ? '800' : '600',
+                            ? isDarkMode ? '#1C3322' : '#DCFCE7'
+                            : isDarkMode ? '#3D2814' : '#FEF3C7'
+                          : isDarkMode ? '#262D3B' : '#F1F3EE',
                       },
                     ]}
                   >
-                    {hasScore ? `${scoreNum}%` : 'Not played yet'}
-                  </Text>
-                  <Ionicons
-                    name={isExpanded ? 'chevron-up' : 'chevron-forward'}
-                    size={18}
-                    color={isDarkMode ? '#9CA3AF' : '#656F7D'}
-                    style={{ marginLeft: 4 }}
+                    <Ionicons
+                      name={game.icon}
+                      size={22}
+                      color={hasScore ? (isHigh ? '#16A34A' : '#D97706') : '#9CA3AF'}
+                    />
+                  </View>
+
+                  <View style={styles.gameTitleCol}>
+                    <Text
+                      style={[
+                        styles.gameTitle,
+                        { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
+                      ]}
+                    >
+                      {game.name}
+                    </Text>
+                    <Text style={styles.gameCategoryText}>{game.category}</Text>
+                  </View>
+
+                  <View style={styles.scoreRow}>
+                    <Text
+                      style={[
+                        styles.scoreNumber,
+                        {
+                          color: hasScore
+                            ? isHigh
+                              ? '#16A34A'
+                              : '#D97706'
+                            : isDarkMode
+                            ? '#9CA3AF'
+                            : '#656F7D',
+                          fontSize: hasScore ? 18 : 13,
+                          fontWeight: hasScore ? '800' : '600',
+                        },
+                      ]}
+                    >
+                      {hasScore ? `${scoreNum}%` : t('noklai.progress.notPlayedYet', 'Not played yet')}
+                    </Text>
+                    <Ionicons
+                      name={isExpanded ? 'chevron-up' : 'chevron-forward'}
+                      size={18}
+                      color={isDarkMode ? '#9CA3AF' : '#656F7D'}
+                      style={{ marginLeft: 4 }}
+                    />
+                  </View>
+                </View>
+
+                {/* Score Bar */}
+                <View style={styles.scoreBarTrack}>
+                  <View
+                    style={[
+                      styles.scoreBarFill,
+                      {
+                        width: hasScore ? `${scoreNum}%` : '0%',
+                        backgroundColor: hasScore ? (isHigh ? '#16A34A' : '#D97706') : '#CBD5E1',
+                      },
+                    ]}
                   />
                 </View>
-              </View>
 
-              {/* Score Bar */}
-              <View style={styles.scoreBarTrack}>
-                <View
-                  style={[
-                    styles.scoreBarFill,
-                    {
-                      width: hasScore ? `${scoreNum}%` : '0%',
-                      backgroundColor: hasScore ? (isHigh ? '#16A34A' : '#D97706') : '#CBD5E1',
-                    },
-                  ]}
-                />
-              </View>
-
-              {/* Expanded details */}
-              {isExpanded && (
-                <View style={styles.expandedBox}>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Sessions Completed:</Text>
-                    <Text style={styles.detailValue}>{game.sessionsCount || 0}</Text>
+                {/* Expanded details */}
+                {isExpanded && (
+                  <View style={styles.expandedBox}>
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>{t('noklai.progress.sessionsCompleted', 'Sessions Completed:')}</Text>
+                      <Text style={styles.detailValue}>{game.sessionsCount || 0}</Text>
+                    </View>
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>{t('noklai.progress.status', 'Status:')}</Text>
+                      <Text style={[styles.detailValue, { color: hasScore ? '#16A34A' : '#9CA3AF' }]}>
+                        {hasScore ? t('noklai.progress.activelyCalibrated', 'Actively calibrated') : t('noklai.progress.awaitingFirstPlay', 'Awaiting first play')}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Status:</Text>
-                    <Text style={[styles.detailValue, { color: hasScore ? '#16A34A' : '#9CA3AF' }]}>
-                      {hasScore ? 'Actively calibrated' : 'Awaiting first play'}
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ) : (
+        <View
+          style={[
+            styles.gameCard,
+            {
+              backgroundColor: isDarkMode ? '#1E232E' : '#FFFFFF',
+              borderColor: isDarkMode ? '#2D3545' : '#E8EAE3',
+              alignItems: 'center',
+              paddingVertical: 36,
+              paddingHorizontal: 20,
+            },
+          ]}
+        >
+          <Ionicons name="game-controller-outline" size={44} color="#9CA3AF" style={{ marginBottom: 12 }} />
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '700',
+              color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary,
+              marginBottom: 6,
+              textAlign: 'center',
+            }}
+          >
+            No games played yet
+          </Text>
+          <Text
+            style={{
+              fontSize: 14,
+              color: isDarkMode ? '#9CA3AF' : '#656F7D',
+              textAlign: 'center',
+              lineHeight: 20,
+            }}
+          >
+            {activePatientName ? `${activePatientName} has not completed any brain exercises yet.` : 'No patient activity recorded yet.'} When games are completed, individual game recall scores will appear here.
+          </Text>
+        </View>
+      )}
     </View>
   );
 
@@ -181,7 +221,7 @@ export default function GamePerformanceScreen({ onBack, embedded = false }) {
       <NoklaiHeader
         showBack
         onBack={onBack || (() => setActiveCaregiverSubScreen('progress'))}
-        title="Game Performance"
+        title={t('noklai.progress.gamePerformanceTitle', 'Game Performance')}
       />
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {content}

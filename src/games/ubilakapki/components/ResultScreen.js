@@ -12,10 +12,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../../../context/LanguageContext';
-import {
-  getLocalizedPlayerName,
-  getLocalizedFeedback,
-} from '../utils/localization.js';
+import { getLocalizedPlayerName } from '../utils/localization.js';
 import { PLAYER_ARCHETYPES } from '../data/players.js';
 
 export function ResultScreen({

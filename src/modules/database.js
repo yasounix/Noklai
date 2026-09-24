@@ -34,30 +34,92 @@ export const getAllPatients = async () => {
       .select('*')
       .order('name', { ascending: true });
     if (error) throw error;
-    return data && data.length > 0 ? data : [
-      { id: '1', patient_id: 'P001', name: 'Chandni Devi', age: 72, gender: 'Female' },
-      { id: '2', patient_id: 'P002', name: 'Ramesh Sharma', age: 78, gender: 'Male' },
-    ];
+    return data || [];
   } catch (error) {
     console.error('Error fetching all patients:', error);
-    return [
-      { id: '1', patient_id: 'P001', name: 'Chandni Devi', age: 72, gender: 'Female' },
-      { id: '2', patient_id: 'P002', name: 'Ramesh Sharma', age: 78, gender: 'Male' },
-    ];
+    return [];
   }
 };
 
 export const getReminders = async (patientId) => {
-  const { data, error } = await supabase
-    .from('reminders')
-    .select('*')
-    .eq('patient_id', patientId)
-    .order('created_at', { ascending: true });
-  if (error) {
-    console.error('Error fetching reminders:', error);
-    throw error;
+  if (!patientId) return [];
+  try {
+    const { data, error } = await supabase
+      .from('reminders')
+      .select('*')
+      .eq('patient_id', String(patientId))
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.warn('Error fetching reminders from Supabase:', error);
+      throw error;
+    }
+
+    return (data || []).map((item) => ({
+      id: String(item.id),
+      patient_id: item.patient_id,
+      title: item.title,
+      time: item.time,
+      date: item.date ,
+      category: item.category || 'Routine',
+      completed: !!item.completed,
+      done: !!item.completed,
+      completed_at: item.completed_at ,
+      created_at: item.created_at,
+      created_by: item.created_by || 'patient',
+    }));
+  } catch (err) {
+    console.warn('getReminders fallback error:', err);
+    throw err;
   }
-  return data || [];
+};
+
+export const addReminder = async (reminderData) => {
+  if (!reminderData || !reminderData.title || !reminderData.patient_id) {
+    throw new Error('addReminder: Missing title or patient_id');
+  }
+
+  const generatedId = reminderData.id || `rem_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  const payload = {
+    id: String(generatedId),
+    patient_id: String(reminderData.patient_id),
+    title: String(reminderData.title).trim(),
+    time: String(reminderData.time || '12:00 PM').trim(),
+    date: reminderData.date ,
+    category: reminderData.category || 'Routine',
+    completed: !!reminderData.completed,
+    completed_at: reminderData.completed ? (reminderData.completed_at || new Date().toISOString()) : null,
+    created_by: reminderData.created_by || 'patient',
+    updated_at: new Date().toISOString(),
+  };
+
+  try {
+    const { data, error } = await supabase
+      .from('reminders')
+      .insert([payload])
+      .select()
+      .single();
+
+    if (error) {
+      console.warn('Error inserting reminder into Supabase:', error);
+      throw error;
+    }
+
+    return {
+      ...payload,
+      ...(data || {}),
+      id: String(data?.id || payload.id),
+      done: !!(data?.completed ?? payload.completed),
+      completed: !!(data?.completed ?? payload.completed),
+    };
+  } catch (err) {
+    console.warn('addReminder network/insert failure, returning local payload:', err);
+    return {
+      ...payload,
+      done: payload.completed,
+      _offline: true,
+    };
+  }
 };
 
 export const getFamilyMembers = async (patientId) => {
@@ -78,7 +140,7 @@ export const addFamilyMember = async (data) => {
     name: data.name,
     relationship: data.relationship,
     description: data.description,
-    phone: data.phone || null,
+    phone: data.phone ,
     photo_url: data.photo_url,
   };
   const { data: result, error } = await supabase
@@ -107,7 +169,7 @@ export const deleteFamilyMember = async (id) => {
 export const saveGameResult = async (resultData) => {
   try {
     const payload = {
-      patient_id: resultData.patient_id || 'P001',
+      patient_id: resultData.patient_id,
       game_name: resultData.game_name || 'Brain Exercise',
       score: typeof resultData.score === 'number' ? resultData.score : 10,
       duration: typeof resultData.duration === 'number' ? resultData.duration : 45,
@@ -285,7 +347,7 @@ export const getRemoteGameSessions = async (patientId) => {
         responseTimeSec: avgRt,
         score: scoreNum !== null ? scoreNum : 0,
         maxScore: 10,
-        timestamp: r.played_at || null,
+        timestamp: r.played_at ,
         metadata: {
           eligibleForCVI: genuineAccuracy !== null,
           source: 'supabase_remote',
@@ -299,12 +361,123 @@ export const getRemoteGameSessions = async (patientId) => {
 };
 
 export const updateReminder = async (id, updates) => {
-  const { data, error } = await supabase
-    .from('reminders')
-    .update(updates)
-    .eq('id', id);
-  if (error) console.error('Error updating reminder:', error);
-  return data;
+  if (!id) return null;
+  const cleanUpdates = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+  };
+
+  // If completed changed, manage completed_at
+  if (typeof updates.completed === 'boolean') {
+    if (updates.completed && !updates.completed_at) {
+      cleanUpdates.completed_at = new Date().toISOString();
+    } else if (!updates.completed) {
+      cleanUpdates.completed_at = null;
+    }
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('reminders')
+      .update(cleanUpdates)
+      .eq('id', String(id))
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Error updating reminder in Supabase:', error);
+      throw error;
+    }
+    return data;
+  } catch (err) {
+    console.warn('updateReminder fallback error:', err);
+    return { id: String(id), ...cleanUpdates };
+  }
+};
+
+export const toggleReminder = async (id, completed) => {
+  return updateReminder(id, {
+    completed: !!completed,
+    completed_at: completed ? new Date().toISOString() : null,
+  });
+};
+
+export const deleteReminder = async (id) => {
+  if (!id) return { success: false };
+  try {
+    const { error } = await supabase
+      .from('reminders')
+      .delete()
+      .eq('id', String(id));
+
+    if (error) {
+      console.warn('Error deleting reminder from Supabase:', error);
+      throw error;
+    }
+    return { success: true, id: String(id) };
+  } catch (err) {
+    console.warn('deleteReminder fallback error:', err);
+    return { success: false, id: String(id), error: err.message };
+  }
+};
+
+export const syncOfflineReminders = async (patientId, localReminders = [], pendingDeletions = []) => {
+  if (!patientId) return localReminders;
+
+  // 1. Process pending deletions on remote
+  if (Array.isArray(pendingDeletions) && pendingDeletions.length > 0) {
+    for (const delId of pendingDeletions) {
+      try {
+        await supabase.from('reminders').delete().eq('id', String(delId));
+      } catch (e) {
+        // Continue
+      }
+    }
+  }
+
+  // 2. Push any locally created/modified items that are marked offline or missing on remote
+  const offlineItems = localReminders.filter((item) => item._offline);
+  for (const item of offlineItems) {
+    try {
+      const payload = {
+        id: String(item.id),
+        patient_id: String(patientId),
+        title: item.title,
+        time: item.time,
+        date: item.date ,
+        category: item.category || 'Routine',
+        completed: !!(item.completed || item.done),
+        completed_at: item.completed_at ,
+        created_by: item.created_by || 'patient',
+        updated_at: new Date().toISOString(),
+      };
+      await supabase.from('reminders').upsert([payload]);
+    } catch (e) {
+      // Continue
+    }
+  }
+
+  // 3. Fetch latest canonical list from remote
+  try {
+    const remoteList = await getReminders(patientId);
+    if (Array.isArray(remoteList)) {
+      const map = new Map();
+      // First populate with remote items
+      remoteList.forEach((r) => map.set(String(r.id), r));
+      // If there are local items not yet synced (e.g. still offline error), preserve them
+      localReminders.forEach((loc) => {
+        if (!map.has(String(loc.id)) && !pendingDeletions.includes(String(loc.id))) {
+          map.set(String(loc.id), loc);
+        }
+      });
+      return Array.from(map.values());
+    }
+  } catch (e) {
+    // If still offline, keep local list minus pending deletions
+    return localReminders.filter((loc) => !pendingDeletions.includes(String(loc.id)));
+  }
+
+  return localReminders;
 };
 
 export const getNextMemoryScene = async (patientId) => {
@@ -337,7 +510,7 @@ export const getNextMemoryScene = async (patientId) => {
       .limit(1)
       .maybeSingle();
 
-    return fallback || null;
+    return fallback ;
   } catch (err) {
     console.error('Error in getNextMemoryScene:', err);
     return null;

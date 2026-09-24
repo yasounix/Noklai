@@ -10,7 +10,7 @@
  */
 
 import { SessionManager } from './SessionManager.js';
-import { DifficultyEngine, defaultDifficultyEngine } from './DifficultyEngine.js';
+import { defaultDifficultyEngine } from './DifficultyEngine.js';
 import {
   calculateAccuracy,
   calculateErrorRate,
@@ -19,7 +19,7 @@ import {
   calculateConsistencyScore,
   calculatePerformanceScore,
 } from './MetricsCalculator.js';
-import { SupabasePerformanceService, defaultPerformanceService } from './SupabasePerformanceService.js';
+import { defaultPerformanceService } from './SupabasePerformanceService.js';
 import { cognitiveAnalytics } from './CognitiveAnalyticsService.js';
 import { getGameDisplayName, resolveGameDomain, getCanonicalGameId } from './gameRegistry.js';
 import { defaultLocalStorage } from '../LocalPerformanceStorage.js';

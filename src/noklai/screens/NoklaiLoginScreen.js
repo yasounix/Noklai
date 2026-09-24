@@ -7,21 +7,23 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../theme/noklaiTheme';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useNoklai } from '../context/NoklaiContext';
 import NoklaiButton from '../components/NoklaiButton';
 import NoklaiCard from '../components/NoklaiCard';
+import LanguageSelector from '../../components/LanguageSelector';
 import { validateLoginRequirements } from '../../utils/phoneValidation';
 import AuthModal from '../components/AuthModal';
 
 export default function NoklaiLoginScreen() {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
   const {
     caregiverName: initialCaregiverName,
     caregiverPhone: initialCaregiverPhone,
@@ -90,6 +92,9 @@ export default function NoklaiLoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Brand Header */}
+          <View style={{ width: '100%', alignItems: 'flex-end', marginBottom: 6 }}>
+            <LanguageSelector compact />
+          </View>
           <View style={styles.brandHeader}>
             <View style={styles.logoBadge}>
               <Ionicons name="leaf" size={26} color="#16A34A" />
@@ -100,7 +105,7 @@ export default function NoklaiLoginScreen() {
                 { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
               ]}
             >
-              Welcome to Noklai
+              {t('noklai.login.welcome', 'Welcome to Noklai')}
             </Text>
             <Text
               style={[
@@ -108,7 +113,7 @@ export default function NoklaiLoginScreen() {
                 { color: isDarkMode ? noklaiTheme.colors.textSecondaryDark : noklaiTheme.colors.textSecondary },
               ]}
             >
-              Enter caregiver and patient details to personalize your memory care experience.
+              {t('noklai.login.subtitle', 'Enter caregiver and patient details to personalize your memory care experience.')}
             </Text>
           </View>
 
@@ -156,14 +161,14 @@ export default function NoklaiLoginScreen() {
                     { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
                   ]}
                 >
-                  Caregiver Details
+                  {t('noklai.login.caregiverSection', 'Caregiver Details')}
                 </Text>
-                <Text style={styles.sectionSub}>Person providing support and monitoring</Text>
+                <Text style={styles.sectionSub}>{t('noklai.login.caregiverSub', 'Person providing support and monitoring')}</Text>
               </View>
             </View>
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              Caregiver Name *
+              {t('noklai.login.caregiverName', 'Caregiver Name *')}
             </Text>
             <TextInput
               placeholder="e.g. Sara Sharma"
@@ -184,7 +189,7 @@ export default function NoklaiLoginScreen() {
             />
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              Caregiver Mobile Number
+              {t('noklai.login.caregiverPhone', 'Caregiver Mobile Number')}
             </Text>
             <TextInput
               placeholder="e.g. +91 98765 43210"
@@ -203,7 +208,7 @@ export default function NoklaiLoginScreen() {
             />
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              Caregiver Profile Picture
+              {t('noklai.login.caregiverPicture', 'Caregiver Profile Picture')}
             </Text>
             <View style={styles.genderRow}>
               <TouchableOpacity
@@ -233,7 +238,7 @@ export default function NoklaiLoginScreen() {
                     },
                   ]}
                 >
-                  Male
+                  {t('noklai.login.male', 'Male')}
                 </Text>
               </TouchableOpacity>
 
@@ -264,7 +269,7 @@ export default function NoklaiLoginScreen() {
                     },
                   ]}
                 >
-                  Female
+                  {t('noklai.login.female', 'Female')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -283,14 +288,14 @@ export default function NoklaiLoginScreen() {
                     { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
                   ]}
                 >
-                  Patient Details
+                  {t('noklai.login.patientSection', 'Patient Details')}
                 </Text>
-                <Text style={styles.sectionSub}>Elder loved one playing memory games</Text>
+                <Text style={styles.sectionSub}>{t('noklai.login.patientSub', 'Elder loved one playing memory games')}</Text>
               </View>
             </View>
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              Patient Name *
+              {t('noklai.login.patientName', 'Patient Name *')}
             </Text>
             <TextInput
               placeholder="e.g. Ramesh Kumar or Aaji"
@@ -311,7 +316,7 @@ export default function NoklaiLoginScreen() {
             />
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              Patient Mobile Number
+              {t('noklai.login.patientPhone', 'Patient Mobile Number')}
             </Text>
             <TextInput
               placeholder="e.g. +91 98765 43211"
@@ -330,7 +335,7 @@ export default function NoklaiLoginScreen() {
             />
 
             <Text style={[styles.inputLabel, { color: isDarkMode ? '#9CA3AF' : '#475569' }]}>
-              Patient Profile Picture
+              {t('noklai.login.patientPicture', 'Patient Profile Picture')}
             </Text>
             <View style={styles.genderRow}>
               <TouchableOpacity
@@ -360,7 +365,7 @@ export default function NoklaiLoginScreen() {
                     },
                   ]}
                 >
-                  Male (Grandfather)
+                  {t('noklai.login.maleGrandfather', 'Male (Grandfather)')}
                 </Text>
               </TouchableOpacity>
 
@@ -391,7 +396,7 @@ export default function NoklaiLoginScreen() {
                     },
                   ]}
                 >
-                  Female (Grandmother)
+                  {t('noklai.login.femaleGrandmother', 'Female (Grandmother)')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -400,7 +405,7 @@ export default function NoklaiLoginScreen() {
           {/* Submit Action */}
           <View style={styles.actionContainer}>
             <NoklaiButton
-              title="Save & Continue"
+              title={t('noklai.login.saveAndContinue', 'Save & Continue')}
               variant="primary"
               size="lg"
               iconRight="arrow-forward"

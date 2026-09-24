@@ -55,12 +55,12 @@ function detectLanguage(text) {
 /**
  * Asynchronous real Gemini AI conversation handler with multi-turn memory
  */
-export const getAIResponseAsync = async (question, contextOrPatientId = 'P001', history = [], options = {}) => {
+export const getAIResponseAsync = async (question, contextOrPatientId = null, history = [], options = {}) => {
   let ctx = {};
   if (typeof contextOrPatientId === 'object' && contextOrPatientId !== null) {
     ctx = contextOrPatientId;
   } else {
-    ctx = { patientId: contextOrPatientId || 'P001' };
+    ctx = { patientId: contextOrPatientId  };
   }
 
   const signal = options && typeof options.addEventListener === 'function'
@@ -121,7 +121,7 @@ export const clearSessionLearnedNames = () => {
 /**
  * Core conversational generator with full context awareness (Offline / Fallback mode)
  */
-export const getAIResponse = (question, contextOrPatientId = 'P001') => {
+export const getAIResponse = (question, contextOrPatientId = null) => {
   if (!question || typeof question !== 'string') {
     return t('ai.responses.default');
   }
@@ -131,10 +131,10 @@ export const getAIResponse = (question, contextOrPatientId = 'P001') => {
   if (typeof contextOrPatientId === 'object' && contextOrPatientId !== null) {
     ctx = contextOrPatientId;
   } else {
-    ctx = { patientId: contextOrPatientId || 'P001' };
+    ctx = { patientId: contextOrPatientId  };
   }
 
-  const pid = ctx.patientId || 'P001';
+  const pid = ctx.patientId ;
   let pName = ctx.learnedName || sessionLearnedNames[pid] || ctx.patientName || 'Loved One';
   const cName = ctx.caregiverName || 'Caregiver';
   const isCaregiver = ctx.role === 'caregiver';
@@ -300,9 +300,9 @@ export const getAIResponse = (question, contextOrPatientId = 'P001') => {
       return `All scheduled medications for today have already been marked completed! Great routine consistency.`;
     }
     if (lang === 'hi') {
-      return `दवाइयों का सामान्य नियम: सुबह 8:00 AM नाश्ते के बाद और रात 8:00 PM भोजन के बाद। आप 'My Day & Reminders' में जाकर अपनी सटीक दवाइयाँ जोड़ सकते हैं।`;
+      return `दवाइयों का कोई विशेष कार्यक्रम अभी निर्धारित नहीं है। अपनी दिनचर्या में दवाइयां जोड़ने के लिए कृपया 'My Day' में रिमाइंडर जोड़ें।`;
     }
-    return t('ai.responses.medicine') || `Routine medication timing is usually at 8:00 AM and 8:00 PM after meals. Please check your personalized routine tab or consult your doctor.`;
+    return `No specific medications are scheduled for today yet. You can add medication times in your daily schedule or consult your caregiver.`;
   }
 
   // -------------------------------------------------------------
@@ -323,9 +323,9 @@ export const getAIResponse = (question, contextOrPatientId = 'P001') => {
       return `All scheduled activities for today are completed! Great job maintaining daily structure and regularity.`;
     }
     if (lang === 'hi') {
-      return `आज का अनुशंसित कार्यक्रम:\n• सुबह 8:00 AM - दवा व हल्का नाश्ता\n• 10:30 AM - बागीचे में टहलना\n• 4:00 PM - 'Suh Tah Lam' या 'Dhopkhel' खेल\n• 7:30 PM - रात्रि भोजन और परिजनों से बात`;
+      return `आज के लिए कोई निर्धारित गतिविधियाँ या रिमाइंडर्स नहीं हैं। आप 'My Day' में जाकर नए रिमाइंडर्स जोड़ सकते हैं।`;
     }
-    return t('ai.responses.schedule') || `Today's schedule: 8:00 AM - Morning medication & breakfast, 10:30 AM - Gentle garden walk, 4:00 PM - Brain exercises, 8:00 PM - Evening family check-in.`;
+    return `No scheduled activities or reminders for today yet. Please ask your caregiver to add your daily routine in the Reminders section.`;
   }
 
   // -------------------------------------------------------------
@@ -357,19 +357,11 @@ export const getAIResponse = (question, contextOrPatientId = 'P001') => {
   // -------------------------------------------------------------
   // 7. FAMILY MEMBERS & LOVED ONES
   // -------------------------------------------------------------
-  if (query.includes('family') || query.includes('parivar') || query.includes('rahul') || query.includes('priya') || query.includes('beta') || query.includes('beti') || query.includes('pota') || query.includes('poti') || query.includes('পৰিয়াল') || query.includes('পরিবার') || query.includes('परिवार')) {
-    if (query.includes('rahul') || query.includes('ৰাহুল') || query.includes('রাহুল') || query.includes('राहुल')) {
-      if (lang === 'hi') return `राहुल आपके सुपुत्र हैं। वे गुवाहाटी में सॉफ्टवेयर इंजीनियर हैं और आपसे बहुत प्रेम करते हैं। वे हर महीने आपसे मिलने आते हैं।`;
-      return t('ai.responses.rahul') || `Rahul is your son. He lives in Guwahati, works as a software engineer, and visits regularly.`;
-    }
-    if (query.includes('priya') || query.includes('প্ৰিয়া') || query.includes('প্রিয়া') || query.includes('प्रिया')) {
-      if (lang === 'hi') return `प्रिया आपकी सुपुत्री हैं। वे दिल्ली में डॉक्टर हैं और हर रविवार आपसे वीडियो कॉल पर बात करती हैं।`;
-      return t('ai.responses.priya') || `Priya is your daughter. She is a doctor in Delhi and calls every Sunday.`;
-    }
+  if (query.includes('family') || query.includes('parivar') || query.includes('beta') || query.includes('beti') || query.includes('pota') || query.includes('poti') || query.includes('পৰিয়াল') || query.includes('পরিবার') || query.includes('परिवार')) {
     if (lang === 'hi') {
-      return `आपके परिवार में आपके बेटे राहुल, बेटी प्रिया, और आपकी प्यारी पोती अनीता हैं। आपका परिवार हमेशा आपके साथ है और आपकी परवाह करता है।`;
+      return `आपकी प्रोफ़ाइल में अभी कोई पारिवारिक सदस्य नहीं जोड़े गए हैं। परिवार के सदस्यों और उनकी यादों को जोड़ने के लिए कृपया अपने केयरगिवर से संपर्क करें।`;
     }
-    return t('ai.responses.family') || `Your family includes your son Rahul, daughter Priya, and granddaughter Anita. They love you deeply and stay closely connected.`;
+    return `No family members have been added to your profile yet. Please ask your caregiver to add family members and photos in the Family & Memories section.`;
   }
 
   // -------------------------------------------------------------

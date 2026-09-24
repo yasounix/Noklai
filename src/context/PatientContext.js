@@ -16,7 +16,7 @@ export function PatientProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingSetup, setIsEditingSetup] = useState(false);
 
-  const [patientId, setPatientId] = useState('P001');
+  const [patientId, setPatientId] = useState(null);
   const [patientName, setPatientName] = useState('');
   const [patientAge, setPatientAge] = useState('');
   const [patientPhone, setPatientPhone] = useState('');
@@ -31,7 +31,21 @@ export function PatientProvider({ children }) {
     async function loadStoredData() {
       try {
         const setupVal = await AsyncStorage.getItem(STORAGE_KEYS.SETUP_DONE);
-        const hasSetup = setupVal === 'true' || setupVal === '1';
+        let hasSetup = setupVal === 'true' || setupVal === '1';
+        if (!hasSetup) {
+          try {
+            const [mig1, mig2, mig3] = await AsyncStorage.multiGet([
+              '@noklai_patient_setup_completed',
+              '@noklai_setup_completed_v2',
+              '@noklai_setup_completed',
+            ]);
+            if (mig1?.[1] === 'true' || mig2?.[1] === 'true' || mig3?.[1] === 'true') {
+              hasSetup = true;
+              await AsyncStorage.setItem(STORAGE_KEYS.SETUP_DONE, 'true');
+              await AsyncStorage.multiRemove(['@noklai_patient_setup_completed', '@noklai_setup_completed_v2']);
+            }
+          } catch (_) {}
+        }
 
         const profileJson = await AsyncStorage.getItem(STORAGE_KEYS.PATIENT_PROFILE);
         const storedId = await AsyncStorage.getItem(STORAGE_KEYS.PATIENT_ID);
@@ -72,7 +86,7 @@ export function PatientProvider({ children }) {
   }, []);
 
   const savePatientSetup = useCallback(async (data) => {
-    const assignedId = data?.patientId || patientId || 'P001';
+    const assignedId = data?.patientId || patientId ;
 
     const profileData = {
       patientId: assignedId,
@@ -114,9 +128,9 @@ export function PatientProvider({ children }) {
       await savePatientProfile({
         patient_id: profileData.patientId,
         name: profileData.patientName,
-        age: parseInt(profileData.patientAge, 10) || null,
-        caregiver_phone: profileData.caregiverPhone || null,
-        patient_phone: profileData.patientPhone || null,
+        age: parseInt(profileData.patientAge, 10) ,
+        caregiver_phone: profileData.caregiverPhone ,
+        patient_phone: profileData.patientPhone ,
       });
     } catch (dbErr) {
       console.warn('Supabase save error (continuing offline):', dbErr);

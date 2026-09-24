@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../../theme/noklaiTheme';
 import { useTheme } from '../../../context/ThemeContext';
+import { useLanguage } from '../../../context/LanguageContext';
 import { useNoklai } from '../../context/NoklaiContext';
 import { StatGrid } from '../../components/StatTile';
 import QuoteCard from '../../components/QuoteCard';
@@ -20,6 +21,7 @@ import ActivityHistoryScreen from './ActivityHistoryScreen';
 
 export default function PatientProgressScreen({ onBack }) {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
   const {
     activePatientName,
     patientAvatar,
@@ -47,7 +49,7 @@ export default function PatientProgressScreen({ onBack }) {
       <NoklaiHeader
         showBack
         onBack={onBack || (() => setActiveCaregiverSubScreen(null))}
-        title={`${activePatientName}'s Progress`}
+        title={t('noklai.progress.title', "%{name}'s Progress", { name: activePatientName })}
       />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -68,7 +70,7 @@ export default function PatientProgressScreen({ onBack }) {
             <View style={styles.activeStatusRow}>
               <View style={[styles.greenActiveDot, { backgroundColor: hasActivity ? '#16A34A' : '#9CA3AF' }]} />
               <Text style={[styles.activeStatusText, { color: hasActivity ? '#16A34A' : '#656F7D' }]}>
-                {hasActivity ? 'Active this week' : 'No recent sessions'}
+                {hasActivity ? t('noklai.progress.activeThisWeek', 'Active this week') : t('noklai.progress.noRecentSessions', 'No recent sessions')}
               </Text>
             </View>
           </View>
@@ -78,7 +80,12 @@ export default function PatientProgressScreen({ onBack }) {
         <View style={styles.tabsContainer}>
           {['overview', 'games', 'history'].map((tabKey) => {
             const isSelected = activeTab === tabKey;
-            const label = tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
+            const tabLabels = {
+              overview: t('noklai.progress.overview', 'Overview'),
+              games: t('noklai.progress.games', 'Games'),
+              history: t('noklai.progress.history', 'History'),
+            };
+            const label = tabLabels[tabKey] || tabKey.charAt(0).toUpperCase() + tabKey.slice(1);
             return (
               <TouchableOpacity
                 key={tabKey}
@@ -125,7 +132,7 @@ export default function PatientProgressScreen({ onBack }) {
                   { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
                 ]}
               >
-                This Week (Verified Data)
+                {t('noklai.progress.thisWeek', 'This Week (Verified Data)')}
               </Text>
               <View style={[styles.trendBadge, { backgroundColor: hasActivity ? '#DCFCE7' : '#F1F5F9' }]}>
                 <Ionicons
@@ -196,7 +203,7 @@ export default function PatientProgressScreen({ onBack }) {
             {/* AI Assistant Insight Action */}
             <View style={{ marginTop: 14 }}>
               <NoklaiButton
-                title="Ask AI for Care Recommendations"
+                title={t('noklai.progress.aiAssessment', 'Ask AI for Care Recommendations')}
                 variant="subtle"
                 icon="sparkles-outline"
                 size="md"
@@ -206,8 +213,8 @@ export default function PatientProgressScreen({ onBack }) {
 
             {/* Quote Card */}
             <QuoteCard
-              quote="Small steps make a big difference."
-              author="Noklai Care"
+              quote={t('noklai.caregiverHome.quoteText', 'Small steps make a big difference.')}
+              author={t('noklai.caregiverHome.quoteAuthor', 'Noklai Care')}
             />
           </View>
         )}

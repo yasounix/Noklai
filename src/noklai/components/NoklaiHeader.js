@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../theme/noklaiTheme';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useNoklai } from '../context/NoklaiContext';
 import AIButton from './AIButton';
 
@@ -16,6 +17,7 @@ export default function NoklaiHeader({
   rightAction,
 }) {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
   const { role, selectRole, setAiModalVisible } = useNoklai();
 
   const isCaregiver = role === 'caregiver';
@@ -135,7 +137,7 @@ export default function NoklaiHeader({
                 },
               ]}
             >
-              {isCaregiver ? 'Caregiver' : 'Patient'}
+              {isCaregiver ? t('noklai.header.caregiver', 'Caregiver') : t('noklai.header.patient', 'Patient')}
             </Text>
             <Ionicons
               name="swap-horizontal"

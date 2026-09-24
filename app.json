@@ -1,21 +1,19 @@
 {
   "expo": {
-    "name": "sih-2026-memory-assistant",
+    "name": "Noklai",
     "slug": "sih-2026-memory-assistant",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yasounix.noklai"
     },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      "package": "com.yasounix.noklai",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -23,6 +21,11 @@
     "plugins": [
       "expo-font",
       "expo-localization"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e56e9347-2785-4382-b196-69eab4557d41"
+      }
+    }
   }
 }

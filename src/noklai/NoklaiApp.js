@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from './theme/noklaiTheme';
 import { NoklaiProvider, useNoklai } from './context/NoklaiContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 // Screens
 import AppLaunchScreen from './screens/AppLaunchScreen';
@@ -38,6 +38,7 @@ import NoklaiAIScreen from './screens/ai/NoklaiAIScreen';
 
 function NoklaiShell() {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
   const {
     currentStep,
     role,
@@ -158,21 +159,21 @@ function NoklaiShell() {
 
   // Exactly 6 tabs for Caregiver (keeps Insights as-is, adds Memory as 6th tab)
   const caregiverTabs = [
-    { id: 'home', label: 'Home', icon: 'home', iconOutline: 'home-outline' },
-    { id: 'activity', label: 'Updates', icon: 'newspaper', iconOutline: 'newspaper-outline' },
-    { id: 'ai', label: 'AI Helper', icon: 'sparkles', isSpecial: true },
-    { id: 'memory', label: 'Memory', icon: 'images', iconOutline: 'images-outline' },
-    { id: 'insights', label: 'Insights', icon: 'bulb', iconOutline: 'bulb-outline' },
-    { id: 'settings', label: 'Settings', icon: 'person', iconOutline: 'person-outline' },
+    { id: 'home', label: t('noklai.nav.home', 'Home'), icon: 'home', iconOutline: 'home-outline' },
+    { id: 'activity', label: t('noklai.nav.updates', 'Updates'), icon: 'newspaper', iconOutline: 'newspaper-outline' },
+    { id: 'ai', label: t('noklai.nav.aiHelper', 'AI Helper'), icon: 'sparkles', isSpecial: true },
+    { id: 'memory', label: t('noklai.nav.memory', 'Memory'), icon: 'images', iconOutline: 'images-outline' },
+    { id: 'insights', label: t('noklai.nav.insights', 'Insights'), icon: 'bulb', iconOutline: 'bulb-outline' },
+    { id: 'settings', label: t('noklai.nav.settings', 'Settings'), icon: 'person', iconOutline: 'person-outline' },
   ];
 
   // Exactly 5 tabs for Patient, replacing Insights with Memory (Noklai AI placed in middle)
   const patientTabs = [
-    { id: 'home', label: 'Home', icon: 'home', iconOutline: 'home-outline' },
-    { id: 'games', label: 'Games', icon: 'game-controller', iconOutline: 'game-controller-outline' },
-    { id: 'ai', label: 'Noklai AI', icon: 'sparkles', isSpecial: true },
-    { id: 'memory', label: 'Memory', icon: 'images', iconOutline: 'images-outline' },
-    { id: 'settings', label: 'Settings', icon: 'person', iconOutline: 'person-outline' },
+    { id: 'home', label: t('noklai.nav.home', 'Home'), icon: 'home', iconOutline: 'home-outline' },
+    { id: 'games', label: t('noklai.nav.games', 'Games'), icon: 'game-controller', iconOutline: 'game-controller-outline' },
+    { id: 'ai', label: t('noklai.nav.noklaiAi', 'Noklai AI'), icon: 'sparkles', isSpecial: true },
+    { id: 'memory', label: t('noklai.nav.memory', 'Memory'), icon: 'images', iconOutline: 'images-outline' },
+    { id: 'settings', label: t('noklai.nav.settings', 'Settings'), icon: 'person', iconOutline: 'person-outline' },
   ];
 
   const tabs = isCaregiver ? caregiverTabs : patientTabs;
