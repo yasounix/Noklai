@@ -4,7 +4,7 @@
   "main": "index.js",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
-    "@react-native-async-storage/async-storage": "^3.1.1",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.18.18",
     "@react-navigation/native": "^7.3.18",
     "@supabase/supabase-js": "^2.115.0",
@@ -17,13 +17,19 @@
     "react-native": "0.86.3",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
-    "react-native-web": "^0.21.2"
+    "react-native-web": "^0.21.2",
+    "three": "^0.186.0"
   },
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "start": "npx expo start",
+    "android": "npx expo start --android",
+    "ios": "npx expo start --ios",
+    "web": "npx expo start --web",
+    "test": "node scripts/test_call_action.mjs"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
 }
