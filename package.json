@@ -8,8 +8,11 @@
     "@react-navigation/bottom-tabs": "^7.18.18",
     "@react-navigation/native": "^7.3.18",
     "@supabase/supabase-js": "^2.115.0",
-    "expo": "~57.0.19",
-    "expo-localization": "^57.0.1",
+    "expo": "~57.0.24",
+    "expo-font": "~57.0.4",
+    "expo-image-picker": "~57.0.19",
+    "expo-localization": "~57.0.2",
+    "expo-speech": "~57.0.3",
     "expo-status-bar": "~57.0.1",
     "i18n-js": "^4.5.3",
     "react": "19.2.3",
@@ -24,11 +27,13 @@
     "start": "npx expo start",
     "android": "npx expo start --android",
     "ios": "npx expo start --ios",
-    "web": "npx expo start --web"
+    "web": "npx expo start --web",
+    "test": "node --test scripts/test_game_registry.mjs scripts/test_performancetracker_import.mjs scripts/test_memory_and_speech.mjs"
   },
   "private": true,
   "devDependencies": {
-    "@types/react": "^19.3.0",
-    "typescript": "^7.0.2"
+    "@expo/ngrok": "^4.1.3",
+    "@types/react": "~19.2.4",
+    "typescript": "~6.0.3"
   }
 }

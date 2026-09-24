@@ -291,33 +291,33 @@ export default function PatientHomeScreen({
             <Ionicons name="chevron-forward" size={24} color={isDarkMode ? '#7DD3FC' : '#0284C7'} />
           </TouchableOpacity>
 
-          {/* Card 4: View My Progress */}
+          {/* Card 4: Family & Loved Ones */}
           <TouchableOpacity
             style={[
               styles.patientBigActionCard,
               {
-                backgroundColor: isDarkMode ? '#2B2313' : '#FFFBEB',
-                borderColor: isDarkMode ? '#54421B' : '#FDE68A',
+                backgroundColor: isDarkMode ? '#2A1C36' : '#FAF5FF',
+                borderColor: isDarkMode ? '#52346B' : '#E9D5FF',
               },
               !isDarkMode && noklaiTheme.shadows.card,
             ]}
             activeOpacity={0.85}
             onPress={() => onNavigateToProgress ? onNavigateToProgress() : onNavigateToGames?.()}
             accessibilityRole="button"
-            accessibilityLabel="4. View My Progress"
+            accessibilityLabel="4. Family and Loved Ones"
           >
-            <View style={[styles.bigActionIconBadge, { backgroundColor: '#D97706' }]}>
-              <Ionicons name="stats-chart" size={24} color="#FFFFFF" />
+            <View style={[styles.bigActionIconBadge, { backgroundColor: '#7C3AED' }]}>
+              <Ionicons name="images" size={24} color="#FFFFFF" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.bigActionTitle, { color: isDarkMode ? '#FCD34D' : '#92400E' }]}>
-                4. View My Progress
+              <Text style={[styles.bigActionTitle, { color: isDarkMode ? '#E9D5FF' : '#4C1D95' }]}>
+                4. Family & Loved Ones
               </Text>
               <Text style={[styles.bigActionSub, { color: isDarkMode ? '#CBD5E1' : '#6B7280' }]}>
-                See completed exercises, routine consistency & achievements
+                Look at familiar family photos and listen to cherished memories
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={24} color={isDarkMode ? '#FCD34D' : '#D97706'} />
+            <Ionicons name="chevron-forward" size={24} color={isDarkMode ? '#C4B5FD' : '#7C3AED'} />
           </TouchableOpacity>
         </View>
 
