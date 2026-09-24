@@ -16,7 +16,7 @@ export function PatientProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingSetup, setIsEditingSetup] = useState(false);
 
-  const [patientId, setPatientId] = useState('P001');
+  const [patientId, setPatientId] = useState(null);
   const [patientName, setPatientName] = useState('');
   const [patientAge, setPatientAge] = useState('');
   const [patientPhone, setPatientPhone] = useState('');
@@ -72,7 +72,7 @@ export function PatientProvider({ children }) {
   }, []);
 
   const savePatientSetup = useCallback(async (data) => {
-    const assignedId = data?.patientId || patientId || 'P001';
+    const assignedId = data?.patientId || patientId ;
 
     const profileData = {
       patientId: assignedId,
@@ -114,9 +114,9 @@ export function PatientProvider({ children }) {
       await savePatientProfile({
         patient_id: profileData.patientId,
         name: profileData.patientName,
-        age: parseInt(profileData.patientAge, 10) || null,
-        caregiver_phone: profileData.caregiverPhone || null,
-        patient_phone: profileData.patientPhone || null,
+        age: parseInt(profileData.patientAge, 10) ,
+        caregiver_phone: profileData.caregiverPhone ,
+        patient_phone: profileData.patientPhone ,
       });
     } catch (dbErr) {
       console.warn('Supabase save error (continuing offline):', dbErr);

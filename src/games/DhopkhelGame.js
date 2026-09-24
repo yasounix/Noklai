@@ -411,7 +411,7 @@ export default function DhopkhelGame({ onExit, patientId: propPatientId }) {
   const { theme, isDarkMode } = useTheme();
   const { t, currentLanguage } = useLanguage();
   const { currentPatientId, patientId } = usePatient?.() || {};
-  const activePlayerId = propPatientId || currentPatientId || patientId || 'P001';
+  const activePlayerId = propPatientId || currentPatientId || patientId ;
 
   // Navigation screen
   const [screen, setScreen] = useState(SCREENS.WELCOME);

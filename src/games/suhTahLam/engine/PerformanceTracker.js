@@ -21,7 +21,7 @@ import { cognitiveAnalytics } from '../../../modules/performance/CognitiveAnalyt
 export class PerformanceTracker {
   constructor({
     gameId = 'suh_tah_lam',
-    playerId = 'P001',
+    playerId = null,
     difficultyEngine = defaultDifficultyEngine,
     storage = defaultLocalStorage,
   } = {}) {
@@ -70,7 +70,7 @@ export class PerformanceTracker {
 
     this.activeRound = {
       roundNumber,
-      sessionId: sessionId || null,
+      sessionId: sessionId ,
       playerId: this.playerId,
       gameId: this.gameId,
       mode: metadata.mode || 'standard',
@@ -331,7 +331,7 @@ export class PerformanceTracker {
     try {
       await this.storage.saveRoundResult({
         session: {
-          id: completedRound.sessionId || null,
+          id: completedRound.sessionId ,
           playerId: this.playerId,
           gameId: this.gameId,
         },
@@ -360,7 +360,7 @@ export class PerformanceTracker {
         score: typeof completedRound.score === 'number' ? completedRound.score : Math.round((completedRound.performanceScore || 0) * 10),
         patientId: this.playerId,
         metadata: {
-          sessionId: completedRound.sessionId || null,
+          sessionId: completedRound.sessionId ,
           roundNumber: completedRound.roundNumber,
           eligibleForCVI: completedRound.eligibleForCVI,
         },

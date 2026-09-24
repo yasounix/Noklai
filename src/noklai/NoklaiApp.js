@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from './theme/noklaiTheme';
 import { NoklaiProvider, useNoklai } from './context/NoklaiContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 // Screens
 import AppLaunchScreen from './screens/AppLaunchScreen';
@@ -36,6 +37,7 @@ import NoklaiAIScreen from './screens/ai/NoklaiAIScreen';
 
 function NoklaiShell() {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
   const {
     currentStep,
     role,
@@ -157,20 +159,20 @@ function NoklaiShell() {
   const isCaregiver = role === 'caregiver';
 
   const caregiverTabs = [
-    { id: 'home', label: 'Home', icon: 'home', iconOutline: 'home-outline' },
-    { id: 'activity', label: 'Updates', icon: 'newspaper', iconOutline: 'newspaper-outline' },
-    { id: 'ai', label: 'AI Helper', icon: 'sparkles', isSpecial: true },
-    { id: 'insights', label: 'Insights', icon: 'bulb', iconOutline: 'bulb-outline' },
-    { id: 'settings', label: 'Settings', icon: 'person', iconOutline: 'person-outline' },
+    { id: 'home', label: t('noklai.nav.home', 'Home'), icon: 'home', iconOutline: 'home-outline' },
+    { id: 'activity', label: t('noklai.nav.updates', 'Updates'), icon: 'newspaper', iconOutline: 'newspaper-outline' },
+    { id: 'ai', label: t('noklai.nav.aiHelper', 'AI Helper'), icon: 'sparkles', isSpecial: true },
+    { id: 'insights', label: t('noklai.nav.insights', 'Insights'), icon: 'bulb', iconOutline: 'bulb-outline' },
+    { id: 'settings', label: t('noklai.nav.settings', 'Settings'), icon: 'person', iconOutline: 'person-outline' },
   ];
 
   // 5 tabs with Noklai AI placed exactly in the middle (index 2)
   const patientTabs = [
-    { id: 'home', label: 'Home', icon: 'home', iconOutline: 'home-outline' },
-    { id: 'games', label: 'Games', icon: 'game-controller', iconOutline: 'game-controller-outline' },
-    { id: 'ai', label: 'Noklai AI', icon: 'sparkles', isSpecial: true },
-    { id: 'insights', label: 'Insights', icon: 'bulb', iconOutline: 'bulb-outline' },
-    { id: 'settings', label: 'Settings', icon: 'person', iconOutline: 'person-outline' },
+    { id: 'home', label: t('noklai.nav.home', 'Home'), icon: 'home', iconOutline: 'home-outline' },
+    { id: 'games', label: t('noklai.nav.games', 'Games'), icon: 'game-controller', iconOutline: 'game-controller-outline' },
+    { id: 'ai', label: t('noklai.nav.noklaiAi', 'Noklai AI'), icon: 'sparkles', isSpecial: true },
+    { id: 'insights', label: t('noklai.nav.insights', 'Insights'), icon: 'bulb', iconOutline: 'bulb-outline' },
+    { id: 'settings', label: t('noklai.nav.settings', 'Settings'), icon: 'person', iconOutline: 'person-outline' },
   ];
 
   const tabs = isCaregiver ? caregiverTabs : patientTabs;

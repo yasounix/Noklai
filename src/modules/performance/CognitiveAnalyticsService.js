@@ -88,7 +88,7 @@ export class CognitiveAnalyticsService {
 
   _generateSessionId(patientId, gameId) {
     this._sessionCounter = (this._sessionCounter || 0) + 1;
-    return `sess_${Date.now()}_${this._sessionCounter}_${patientId || 'P001'}_${gameId || 'game'}`;
+    return `sess_${Date.now()}_${this._sessionCounter}_${patientId }_${gameId || 'game'}`;
   }
 
   /**
@@ -297,7 +297,7 @@ export class CognitiveAnalyticsService {
    * Computes comprehensive caregiver dashboard statistics strictly from verified gameplay data
    */
   async getCaregiverDashboardData(timeframe = '7d', patientInfo = {}) {
-    const pid = patientInfo?.patientId || null;
+    const pid = patientInfo?.patientId ;
     if (!pid) {
       return this._buildEmptyDashboard(timeframe);
     }
@@ -435,7 +435,7 @@ export class CognitiveAnalyticsService {
       clinicalObservations,
       gameBreakdown,
       isCalibrated,
-      lastSessionAt: filtered[filtered.length - 1]?.timestamp || null,
+      lastSessionAt: filtered[filtered.length - 1]?.timestamp ,
       disclaimer: CVI_CONSTANTS.DISCLAIMER,
     };
   }

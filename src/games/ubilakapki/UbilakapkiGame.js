@@ -53,7 +53,7 @@ export default function UbilakapkiGame({ onExit, patientId: propPatientId }) {
   const { theme, isDarkMode } = useTheme();
   const { t, currentLanguage } = useLanguage();
   const { currentPatientId, patientId } = usePatient?.() || {};
-  const activePlayerId = propPatientId || currentPatientId || patientId || 'P001';
+  const activePlayerId = propPatientId || currentPatientId || patientId ;
 
   // Centralized Adaptive Performance Tracker
   const trackerRef = useRef(null);

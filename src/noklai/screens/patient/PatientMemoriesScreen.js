@@ -11,63 +11,40 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../../theme/noklaiTheme';
 import { useTheme } from '../../../context/ThemeContext';
+import { useLanguage } from '../../../context/LanguageContext';
 import { useNoklai } from '../../context/NoklaiContext';
 import NoklaiHeader from '../../components/NoklaiHeader';
 import QuoteCard from '../../components/QuoteCard';
 import { getFamilyMembers } from '../../../modules/database';
 
-const DEFAULT_FAMILY = [
-  {
-    id: 'f1',
-    name: 'Rahul',
-    relation: 'Grandson',
-    age: 19,
-    avatar: '👦',
-    phone: '+91 98765 43210',
-    notes: 'Studying in college in Guwahati. Loves football and visits every festival!',
-  },
-  {
-    id: 'f2',
-    name: 'Priya',
-    relation: 'Daughter',
-    age: 44,
-    avatar: '👩',
-    phone: '+91 98765 43211',
-    notes: 'Calls every evening at 6:00 PM. Made the traditional bamboo pickle you love.',
-  },
-  {
-    id: 'f3',
-    name: 'Anand',
-    relation: 'Brother',
-    age: 69,
-    avatar: '👨',
-    phone: '+91 98765 43212',
-    notes: 'Lives nearby in the village. Enjoys morning walks and sharing old tales.',
-  },
-];
-
 export default function PatientMemoriesScreen() {
   const { isDarkMode } = useTheme();
   const { activePatient } = useNoklai();
 
-  const [family, setFamily] = useState(DEFAULT_FAMILY);
+  const [family, setFamily] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadFamily() {
+      if (!activePatient?.id) {
+        setFamily([]);
+        setLoading(false);
+        return;
+      }
       try {
         const data = await getFamilyMembers(activePatient.id);
-        if (data && data.length > 0) {
-          setFamily(data);
-        }
+        setFamily(Array.isArray(data) ? data : []);
       } catch (e) {
-        // use default fallback
+        setFamily([]);
+      } finally {
+        setLoading(false);
       }
     }
     loadFamily();
-  }, [activePatient.id]);
+  }, [activePatient?.id]);
 
   const handleCallMember = (member) => {
-    Alert.alert('Call Loved One', `Dialing ${member.name} (${member.relation})...`, [{ text: 'OK' }]);
+    Alert.alert('Call Loved One', `Dialing ${member.name} (${member.relation || member.relationship || 'Loved One'})...`, [{ text: 'OK' }]);
   };
 
   return (
@@ -103,72 +80,114 @@ export default function PatientMemoriesScreen() {
           </Text>
         </View>
 
-        {/* Family Cards */}
-        <View style={styles.familyList}>
-          {family.map((member) => (
-            <View
-              key={member.id}
-              style={[
-                styles.memberCard,
-                {
-                  backgroundColor: isDarkMode ? '#1E232E' : '#FFFFFF',
-                  borderColor: isDarkMode ? '#2D3545' : '#E8EAE3',
-                },
-                !isDarkMode && noklaiTheme.shadows.card,
-              ]}
-            >
-              <View style={styles.topRow}>
-                <View style={[styles.avatarCircle, { backgroundColor: '#EDE9FE' }]}>
-                  <Text style={{ fontSize: 32 }}>{member.avatar || '👤'}</Text>
-                </View>
-
-                <View style={styles.memberInfoCol}>
-                  <Text
-                    style={[
-                      styles.memberName,
-                      { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
-                    ]}
-                  >
-                    {member.name}
-                  </Text>
-                  <View style={styles.relationBadge}>
-                    <Text style={styles.relationText}>{member.relation || member.relationship}</Text>
+        {/* Family Cards or Empty State */}
+        {loading ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <Text style={{ color: isDarkMode ? '#9CA3AF' : '#656F7D' }}>Loading family memories...</Text>
+          </View>
+        ) : family && family.length > 0 ? (
+          <View style={styles.familyList}>
+            {family.map((member) => (
+              <View
+                key={member.id}
+                style={[
+                  styles.memberCard,
+                  {
+                    backgroundColor: isDarkMode ? '#1E232E' : '#FFFFFF',
+                    borderColor: isDarkMode ? '#2D3545' : '#E8EAE3',
+                  },
+                  !isDarkMode && noklaiTheme.shadows.card,
+                ]}
+              >
+                <View style={styles.topRow}>
+                  <View style={[styles.avatarCircle, { backgroundColor: '#EDE9FE' }]}>
+                    <Text style={{ fontSize: 32 }}>{member.avatar || '👤'}</Text>
                   </View>
+
+                  <View style={styles.memberInfoCol}>
+                    <Text
+                      style={[
+                        styles.memberName,
+                        { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
+                      ]}
+                    >
+                      {member.name}
+                    </Text>
+                    <View style={styles.relationBadge}>
+                      <Text style={styles.relationText}>{member.relation || member.relationship || 'Loved One'}</Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.callCircleButton}
+                    onPress={() => handleCallMember(member)}
+                    accessibilityLabel={`Call ${member.name}`}
+                  >
+                    <Ionicons name="call" size={20} color="#FFFFFF" />
+                  </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity
-                  style={styles.callCircleButton}
-                  onPress={() => handleCallMember(member)}
-                  accessibilityLabel={`Call ${member.name}`}
-                >
-                  <Ionicons name="call" size={20} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
-
-              {member.notes && (
-                <View
-                  style={[
-                    styles.memoryNoteBox,
-                    {
-                      backgroundColor: isDarkMode ? '#18241D' : '#F2FAF4',
-                      borderColor: isDarkMode ? '#23442E' : '#D1EAD8',
-                    },
-                  ]}
-                >
-                  <Ionicons name="heart" size={16} color="#16A34A" style={{ marginRight: 8, marginTop: 1 }} />
-                  <Text
+                {member.notes && (
+                  <View
                     style={[
-                      styles.memoryNoteText,
-                      { color: isDarkMode ? '#A7F3D0' : '#14532D' },
+                      styles.memoryNoteBox,
+                      {
+                        backgroundColor: isDarkMode ? '#18241D' : '#F2FAF4',
+                        borderColor: isDarkMode ? '#23442E' : '#D1EAD8',
+                      },
                     ]}
                   >
-                    {member.notes}
-                  </Text>
-                </View>
-              )}
-            </View>
-          ))}
-        </View>
+                    <Ionicons name="heart" size={16} color="#16A34A" style={{ marginRight: 8, marginTop: 1 }} />
+                    <Text
+                      style={[
+                        styles.memoryNoteText,
+                        { color: isDarkMode ? '#A7F3D0' : '#14532D' },
+                      ]}
+                    >
+                      {member.notes}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.memberCard,
+              {
+                backgroundColor: isDarkMode ? '#1E232E' : '#FFFFFF',
+                borderColor: isDarkMode ? '#2D3545' : '#E8EAE3',
+                alignItems: 'center',
+                paddingVertical: 36,
+                paddingHorizontal: 20,
+              },
+            ]}
+          >
+            <Ionicons name="people-outline" size={44} color="#9CA3AF" style={{ marginBottom: 12 }} />
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '700',
+                color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary,
+                marginBottom: 6,
+                textAlign: 'center',
+              }}
+            >
+              No family members added yet
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                color: isDarkMode ? '#9CA3AF' : '#656F7D',
+                textAlign: 'center',
+                lineHeight: 20,
+              }}
+            >
+              Ask your caregiver to add family members and photos in your profile.
+            </Text>
+          </View>
+        )}
 
         <QuoteCard
           quote="Every smile remembers love."

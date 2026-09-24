@@ -34,7 +34,7 @@ export default function MemoryStoriesGame({ onExit, patientId: propPatientId }) 
   const { theme, isDarkMode } = useTheme();
   const { t, currentLanguage } = useLanguage();
   const { patientId: contextPatientId } = usePatient?.() || {};
-  const activePatientId = propPatientId || contextPatientId || 'P001';
+  const activePatientId = propPatientId || contextPatientId ;
 
   // Screen flow state
   const [screen, setScreen] = useState(SCREENS.STORY);
@@ -130,7 +130,7 @@ export default function MemoryStoriesGame({ onExit, patientId: propPatientId }) 
       const totalAttempts = currentTierQuestions.length;
       const totalCorrect = answeredQuestionIds.size;
       const actualDurationSec = Math.max(1, Math.round((Date.now() - tierStartTimeRef.current) / 1000));
-      const playerId = activePatientId || 'P001';
+      const playerId = activePatientId ;
       const sessionId = sessionIdRef.current;
       const isEligible = totalAttempts > 0;
 

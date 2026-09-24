@@ -3,9 +3,11 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../theme/noklaiTheme';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export function StatSummaryRow({ gamesToday = 0, avgAccuracy = null, playTimeMinutes = 0 }) {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
 
   const formattedAccuracy =
     typeof avgAccuracy === 'number'
@@ -28,7 +30,7 @@ export function StatSummaryRow({ gamesToday = 0, avgAccuracy = null, playTimeMin
           {gamesToday || 0}
         </Text>
         <Text style={[styles.summaryLabel, { color: isDarkMode ? '#9CA3AF' : '#656F7D' }]}>
-          Games{'\n'}(played today)
+          {t('noklai.stats.gamesToday', 'Games\n(played today)')}
         </Text>
       </View>
 
@@ -40,7 +42,7 @@ export function StatSummaryRow({ gamesToday = 0, avgAccuracy = null, playTimeMin
           {formattedAccuracy}
         </Text>
         <Text style={[styles.summaryLabel, { color: isDarkMode ? '#9CA3AF' : '#656F7D' }]}>
-          Average{'\n'}accuracy
+          {t('noklai.stats.avgAccuracy', 'Average\naccuracy')}
         </Text>
       </View>
 
@@ -49,10 +51,10 @@ export function StatSummaryRow({ gamesToday = 0, avgAccuracy = null, playTimeMin
       <View style={styles.summaryItem}>
         <Ionicons name="time-outline" size={18} color="#D97706" />
         <Text style={[styles.summaryNumber, { color: isDarkMode ? '#F3F4F6' : '#1E242B' }]}>
-          {playTimeMinutes || 0} min
+          {playTimeMinutes || 0} {t('noklai.stats.min', 'min')}
         </Text>
         <Text style={[styles.summaryLabel, { color: isDarkMode ? '#9CA3AF' : '#656F7D' }]}>
-          Total play{'\n'}time
+          {t('noklai.stats.totalPlayTime', 'Total play\ntime')}
         </Text>
       </View>
     </View>
@@ -66,11 +68,14 @@ export function StatGrid({
   level = 'Beginner',
 }) {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
 
   const formattedAccuracy =
     typeof avgAccuracy === 'number'
       ? `${Math.round(avgAccuracy)}%`
       : avgAccuracy || '--';
+
+  const displayLevel = level === 'Beginner' ? t('noklai.stats.beginner', 'Beginner') : level;
 
   const tiles = [
     {
@@ -79,7 +84,7 @@ export function StatGrid({
       iconColor: '#EA580C',
       iconBg: '#FFEDD5',
       value: `${daysActive || 0}`,
-      label: 'Days Active',
+      label: t('noklai.stats.daysActive', 'Days Active'),
     },
     {
       id: 'accuracy',
@@ -87,23 +92,23 @@ export function StatGrid({
       iconColor: '#16A34A',
       iconBg: '#DCFCE7',
       value: formattedAccuracy,
-      label: 'Avg. Accuracy',
+      label: t('noklai.stats.avgAccuracyGrid', 'Avg. Accuracy'),
     },
     {
       id: 'time',
       icon: 'time-outline',
       iconColor: '#D97706',
       iconBg: '#FEF3C7',
-      value: `${playTimeMinutes || 0} min`,
-      label: 'Total Play Time',
+      value: `${playTimeMinutes || 0} ${t('noklai.stats.min', 'min')}`,
+      label: t('noklai.stats.totalPlayTimeGrid', 'Total Play Time'),
     },
     {
       id: 'level',
       icon: 'bar-chart-outline',
       iconColor: '#2563EB',
       iconBg: '#EFF6FF',
-      value: level || 'Beginner',
-      label: 'Current Level',
+      value: displayLevel,
+      label: t('noklai.stats.currentLevel', 'Current Level'),
     },
   ];
 

@@ -238,7 +238,7 @@ export default function NoklaiAIScreen({ onClose }) {
     }
 
     const context = {
-      patientId: activePatientId || 'P001',
+      patientId: activePatientId ,
       patientName: learnedName || pName,
       learnedName: learnedName,
       caregiverName: cName,

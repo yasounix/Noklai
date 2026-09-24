@@ -64,7 +64,7 @@ export default function SuhTahLamGame({ onExit, patientId: propPatientId }) {
   const { t, currentLanguage } = useLanguage();
   const { currentPatientId, patientId } = usePatient?.() || {};
   // Safe fallback to P001 only if context is unconfigured
-  const effectivePlayerId = propPatientId || patientId || currentPatientId || 'P001';
+  const effectivePlayerId = propPatientId || patientId || currentPatientId ;
 
   const [currentStep, setCurrentStep] = useState(GAME_STEPS.START);
   const [currentDifficulty, setCurrentDifficulty] = useState('easy');
@@ -130,7 +130,7 @@ export default function SuhTahLamGame({ onExit, patientId: propPatientId }) {
       trackerRef.current.startRound({
         difficulty: currentDifficulty,
         sequenceId: sequence.id,
-        sessionId: currentSession?.id || null,
+        sessionId: currentSession?.id ,
       });
     }
 

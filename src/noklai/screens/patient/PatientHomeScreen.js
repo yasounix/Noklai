@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../../theme/noklaiTheme';
 import { useTheme } from '../../../context/ThemeContext';
+import { useLanguage } from '../../../context/LanguageContext';
 import { useNoklai } from '../../context/NoklaiContext';
 import NoklaiCard from '../../components/NoklaiCard';
 import QuoteCard from '../../components/QuoteCard';
 import AIButton from '../../components/AIButton';
 import NoklaiButton from '../../components/NoklaiButton';
+import {
+  REMINDER_CATEGORIES,
+  getCategoryMeta,
+  getReminderStatus,
+  sortReminders,
+} from '../../../modules/remindersHelper';
 
 export default function PatientHomeScreen({
   onNavigateToGames,
@@ -27,6 +34,7 @@ export default function PatientHomeScreen({
   onNavigateToProgress,
 }) {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
   const {
     activePatientName,
     patientAvatar,
@@ -40,21 +48,47 @@ export default function PatientHomeScreen({
 
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [reminderTitle, setReminderTitle] = useState('');
-  const [reminderTime, setReminderTime] = useState('');
+  const [reminderTime, setReminderTime] = useState('08:30 AM');
+  const [reminderCategory, setReminderCategory] = useState('Medication');
+
+  const sortedReminders = useMemo(() => {
+    if (!Array.isArray(reminders)) return [];
+    return sortReminders(reminders);
+  }, [reminders]);
 
   const handleSaveReminder = () => {
     if (!reminderTitle.trim()) {
-      Alert.alert('Missing Title', 'Please enter a reminder name (e.g. Blood Pressure medicine).');
+      Alert.alert(
+        t('noklai.patientHome.missingTitle', 'Missing Title'),
+        t('noklai.patientHome.missingTitleAlert', 'Please enter a reminder name (e.g. Blood Pressure medicine).')
+      );
       return;
     }
     addReminder({
       title: reminderTitle.trim(),
       time: reminderTime.trim() || '12:00 PM',
-      category: 'Routine',
+      category: reminderCategory,
+      created_by: 'patient',
     });
     setReminderTitle('');
-    setReminderTime('');
+    setReminderTime('08:30 AM');
+    setReminderCategory('Medication');
     setAddModalVisible(false);
+  };
+
+  const handleDeleteReminder = (item) => {
+    Alert.alert(
+      t('noklai.caregiverHome.deleteReminderTitle', 'Delete Reminder'),
+      t('noklai.caregiverHome.deleteReminderConfirm', 'Are you sure you want to remove "%{title}"?', { title: item.title }),
+      [
+        { text: t('noklai.patientHome.cancel', 'Cancel'), style: 'cancel' },
+        {
+          text: t('noklai.caregiverHome.deleteBtn', 'Delete'),
+          style: 'destructive',
+          onPress: () => deleteReminder(item.id),
+        },
+      ]
+    );
   };
 
   return (
@@ -78,7 +112,9 @@ export default function PatientHomeScreen({
                 { color: isDarkMode ? '#86EFAC' : '#15803D' },
               ]}
             >
-              Namaste, {activePatientName}!
+              {activePatientName
+                ? t('noklai.patientHome.greeting', 'Namaste, %{name}!', { name: activePatientName })
+                : t('noklai.patientHome.greetingDefault', 'Namaste!')}
             </Text>
             <Text
               style={[
@@ -86,7 +122,7 @@ export default function PatientHomeScreen({
                 { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
               ]}
             >
-              Welcome back. What would you like to do today?
+              {t('noklai.patientHome.welcomeBack', 'Welcome back. What would you like to do today?')}
             </Text>
             <Text
               style={[
@@ -94,7 +130,7 @@ export default function PatientHomeScreen({
                 { color: isDarkMode ? '#9CA3AF' : '#6B7280' },
               ]}
             >
-              Let’s try together • Take your time
+              {t('noklai.patientHome.encourage', 'Let’s try together • Take your time')}
             </Text>
           </View>
 
@@ -113,7 +149,7 @@ export default function PatientHomeScreen({
                 { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
               ]}
             >
-              My Day & Reminders
+              {t('noklai.patientHome.myDay', 'My Day & Reminders')}
             </Text>
           </View>
 
@@ -123,7 +159,7 @@ export default function PatientHomeScreen({
             activeOpacity={0.7}
           >
             <Ionicons name="add-circle" size={18} color="#16A34A" style={{ marginRight: 4 }} />
-            <Text style={styles.addReminderHeaderText}>Add</Text>
+            <Text style={styles.addReminderHeaderText}>{t('noklai.patientHome.add', 'Add')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -132,71 +168,106 @@ export default function PatientHomeScreen({
             <View style={styles.emptyContainer}>
               <ActivityIndicator size="small" color="#16A34A" />
               <Text style={[styles.emptyText, { color: isDarkMode ? '#9CA3AF' : '#656F7D' }]}>
-                Checking reminders...
+                {t('noklai.patientHome.checkingReminders', 'Checking reminders...')}
               </Text>
             </View>
-          ) : reminders && reminders.length > 0 ? (
-            reminders.map((item, index) => (
-              <View
-                key={item.id}
-                style={[
-                  styles.routineRow,
-                  index < reminders.length - 1 && styles.routineRowBorder,
-                  item.done && { backgroundColor: isDarkMode ? '#16281E' : '#F4FBF6' },
-                ]}
-              >
-                <TouchableOpacity
-                  onPress={() => toggleRoutineItem(item.id)}
-                  style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
-                  activeOpacity={0.7}
+          ) : sortedReminders && sortedReminders.length > 0 ? (
+            sortedReminders.map((item, index) => {
+              const isDone = Boolean(item.completed || item.done);
+              const catMeta = getCategoryMeta(item.category);
+              const statusMeta = getReminderStatus(item);
+
+              return (
+                <View
+                  key={item.id}
+                  style={[
+                    styles.routineRow,
+                    index < sortedReminders.length - 1 && styles.routineRowBorder,
+                    isDone && { backgroundColor: isDarkMode ? '#142318' : '#F6FBF7' },
+                  ]}
                 >
-                  <Ionicons
-                    name={item.done ? 'checkmark-circle' : 'ellipse-outline'}
-                    size={26}
-                    color={item.done ? '#16A34A' : '#9CA3AF'}
-                    style={{ marginRight: 14 }}
-                  />
-                  <View style={{ flex: 1 }}>
+                  {/* Category Icon Badge */}
+                  <View style={[styles.categoryIconBadge, { backgroundColor: catMeta.badgeBg }]}>
+                    <Ionicons name={catMeta.icon} size={22} color={catMeta.color} />
+                  </View>
+
+                  {/* Reminder Content */}
+                  <View style={{ flex: 1, marginRight: 10 }}>
                     <Text
                       style={[
                         styles.routineTitle,
                         {
-                          color: item.done
-                            ? isDarkMode ? '#9CA3AF' : '#6B7280'
-                            : isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary,
-                          textDecorationLine: item.done ? 'line-through' : 'none',
+                          color: isDone
+                            ? (isDarkMode ? '#9CA3AF' : '#6B7280')
+                            : (isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary),
+                          textDecorationLine: isDone ? 'line-through' : 'none',
                         },
                       ]}
+                      numberOfLines={2}
                     >
                       {item.title}
                     </Text>
-                    {item.time ? <Text style={styles.routineTime}>{item.time}</Text> : null}
-                  </View>
-                </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={() => deleteReminder(item.id)}
-                  style={styles.deleteReminderBtn}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons name="trash-outline" size={16} color="#9CA3AF" />
-                </TouchableOpacity>
-              </View>
-            ))
+                    <View style={styles.routineMetaRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10 }}>
+                        <Ionicons name="time-outline" size={13} color={isDarkMode ? '#9CA3AF' : '#6B7280'} style={{ marginRight: 4 }} />
+                        <Text style={[styles.routineTime, { color: isDarkMode ? '#9CA3AF' : '#6B7280' }]}>
+                          {item.time || '12:00 PM'}
+                        </Text>
+                      </View>
+
+                      {/* Status Badge */}
+                      <View style={[styles.statusBadge, { backgroundColor: statusMeta.badgeBg }]}>
+                        <Ionicons name={statusMeta.icon} size={11} color={statusMeta.color} style={{ marginRight: 3 }} />
+                        <Text style={[styles.statusBadgeText, { color: statusMeta.color }]}>
+                          {statusMeta.label}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Interactive Toggle Checkbox - Large touch target for elderly */}
+                  <TouchableOpacity
+                    onPress={() => toggleRoutineItem(item.id)}
+                    style={styles.checkboxTouchTarget}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: isDone }}
+                    accessibilityLabel={isDone ? "Mark incomplete" : "Mark completed"}
+                  >
+                    <Ionicons
+                      name={isDone ? 'checkmark-circle' : 'ellipse-outline'}
+                      size={32}
+                      color={isDone ? '#16A34A' : (isDarkMode ? '#4B5563' : '#9CA3AF')}
+                    />
+                  </TouchableOpacity>
+
+                  {/* Delete Button */}
+                  <TouchableOpacity
+                    onPress={() => handleDeleteReminder(item)}
+                    style={styles.deleteReminderBtn}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    accessibilityLabel="Delete reminder"
+                  >
+                    <Ionicons name="trash-outline" size={18} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+              );
+            })
           ) : (
             <View style={styles.emptyContainer}>
               <Ionicons name="calendar-outline" size={36} color="#9CA3AF" style={{ marginBottom: 6 }} />
               <Text style={[styles.emptyText, { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary }]}>
-                No reminders scheduled
+                {t('noklai.patientHome.noReminders', 'No reminders scheduled')}
               </Text>
               <Text style={[styles.emptySubText, { color: isDarkMode ? '#9CA3AF' : '#656F7D' }]}>
-                You haven&apos;t added any reminders yet. Tap &quot;Add&quot; to set medication or routine reminders.
+                {t('noklai.patientHome.noRemindersSub', 'You haven\'t added any reminders yet. Tap "Add" to set medication or routine reminders.')}
               </Text>
               <TouchableOpacity
                 style={styles.emptyAddBtn}
                 onPress={() => setAddModalVisible(true)}
               >
-                <Text style={styles.emptyAddBtnText}>+ Add First Reminder</Text>
+                <Text style={styles.emptyAddBtnText}>{t('noklai.patientHome.addFirstReminder', '+ Add First Reminder')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -217,17 +288,17 @@ export default function PatientHomeScreen({
             activeOpacity={0.85}
             onPress={onNavigateToGames}
             accessibilityRole="button"
-            accessibilityLabel="1. Play a Memory Game"
+            accessibilityLabel={t('noklai.patientHome.playMemoryGame', '1. Play a Memory Game')}
           >
             <View style={[styles.bigActionIconBadge, { backgroundColor: '#7C3AED' }]}>
               <Ionicons name="game-controller" size={28} color="#FFFFFF" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.bigActionTitle, { color: isDarkMode ? '#E9D5FF' : '#4C1D95' }]}>
-                1. Play a Memory Game
+                {t('noklai.patientHome.playMemoryGame', '1. Play a Memory Game')}
               </Text>
               <Text style={[styles.bigActionSub, { color: isDarkMode ? '#CBD5E1' : '#6B7280' }]}>
-                Suh Tah Lam, Dhopkhel, Ubilakapki & Northeast Memories
+                {t('noklai.patientHome.playMemoryGameSub', 'Suh Tah Lam, Dhopkhel, Ubilakapki & Northeast Memories')}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={isDarkMode ? '#C4B5FD' : '#7C3AED'} />
@@ -246,17 +317,17 @@ export default function PatientHomeScreen({
             activeOpacity={0.85}
             onPress={() => onContinueActivity ? onContinueActivity('suhTahLam') : onNavigateToGames?.()}
             accessibilityRole="button"
-            accessibilityLabel="2. Continue Activity"
+            accessibilityLabel={t('noklai.patientHome.continueActivity', '2. Continue Activity')}
           >
             <View style={[styles.bigActionIconBadge, { backgroundColor: '#16A34A' }]}>
               <Ionicons name="play-circle" size={28} color="#FFFFFF" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.bigActionTitle, { color: isDarkMode ? '#86EFAC' : '#14532D' }]}>
-                2. Continue Activity
+                {t('noklai.patientHome.continueActivity', '2. Continue Activity')}
               </Text>
               <Text style={[styles.bigActionSub, { color: isDarkMode ? '#CBD5E1' : '#6B7280' }]}>
-                Resume gentle daily exercise — take your time, zero rush
+                {t('noklai.patientHome.continueActivitySub', 'Resume gentle daily exercise — take your time, zero rush')}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={isDarkMode ? '#86EFAC' : '#16A34A'} />
@@ -275,17 +346,17 @@ export default function PatientHomeScreen({
             activeOpacity={0.85}
             onPress={() => onOpenAI ? onOpenAI() : setAiModalVisible(true)}
             accessibilityRole="button"
-            accessibilityLabel="3. Talk to NOKLAI"
+            accessibilityLabel={t('noklai.patientHome.talkNoklai', '3. Talk to NOKLAI')}
           >
             <View style={[styles.bigActionIconBadge, { backgroundColor: '#0284C7' }]}>
               <Ionicons name="sparkles" size={26} color="#FFFFFF" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.bigActionTitle, { color: isDarkMode ? '#7DD3FC' : '#0369A1' }]}>
-                3. Talk to NOKLAI
+                {t('noklai.patientHome.talkNoklai', '3. Talk to NOKLAI')}
               </Text>
               <Text style={[styles.bigActionSub, { color: isDarkMode ? '#CBD5E1' : '#6B7280' }]}>
-                Voice & chat companion for reminders, folklore & friendly talks
+                {t('noklai.patientHome.talkNoklaiSub', 'Voice & chat companion for reminders, folklore & friendly talks')}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={isDarkMode ? '#7DD3FC' : '#0284C7'} />
@@ -304,17 +375,17 @@ export default function PatientHomeScreen({
             activeOpacity={0.85}
             onPress={() => onNavigateToProgress ? onNavigateToProgress() : onNavigateToGames?.()}
             accessibilityRole="button"
-            accessibilityLabel="4. View My Progress"
+            accessibilityLabel={t('noklai.patientHome.viewProgress', '4. View My Progress')}
           >
             <View style={[styles.bigActionIconBadge, { backgroundColor: '#D97706' }]}>
               <Ionicons name="stats-chart" size={24} color="#FFFFFF" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.bigActionTitle, { color: isDarkMode ? '#FCD34D' : '#92400E' }]}>
-                4. View My Progress
+                {t('noklai.patientHome.viewProgress', '4. View My Progress')}
               </Text>
               <Text style={[styles.bigActionSub, { color: isDarkMode ? '#CBD5E1' : '#6B7280' }]}>
-                See completed exercises, routine consistency & achievements
+                {t('noklai.patientHome.viewProgressSub', 'See completed exercises, routine consistency & achievements')}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={isDarkMode ? '#FCD34D' : '#D97706'} />
@@ -323,8 +394,8 @@ export default function PatientHomeScreen({
 
         {/* Inspirational Quote Card */}
         <QuoteCard
-          quote="Small steps make a big difference."
-          author="Noklai Care"
+          quote={t('noklai.patientHome.quote', 'Small steps make a big difference.')}
+          author={t('noklai.patientHome.quoteAuthor', 'Noklai Care')}
         />
 
         {/* Add Reminder Modal */}
@@ -336,18 +407,27 @@ export default function PatientHomeScreen({
                 { backgroundColor: isDarkMode ? '#1E232E' : '#FFFFFF' },
               ]}
             >
-              <Text
-                style={[
-                  styles.modalTitle,
-                  { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
-                ]}
-              >
-                Add Daily Reminder
-              </Text>
+              <View style={styles.modalHeaderRow}>
+                <Text
+                  style={[
+                    styles.modalTitle,
+                    { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
+                  ]}
+                >
+                  {t('noklai.patientHome.addReminderTitle', 'Add Daily Reminder')}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setAddModalVisible(false)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="close" size={22} color={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+                </TouchableOpacity>
+              </View>
 
-              <Text style={styles.inputLabel}>Reminder Name</Text>
+              {/* Title input */}
+              <Text style={styles.inputLabel}>{t('noklai.patientHome.reminderNameLabel', 'Reminder Name')}</Text>
               <TextInput
-                placeholder="e.g. Afternoon Medication, Evening Walk"
+                placeholder={t('noklai.patientHome.reminderNamePlaceholder', 'e.g. Afternoon Medication, Evening Walk')}
                 placeholderTextColor="#9CA3AF"
                 value={reminderTitle}
                 onChangeText={setReminderTitle}
@@ -360,9 +440,50 @@ export default function PatientHomeScreen({
                 ]}
               />
 
-              <Text style={styles.inputLabel}>Time</Text>
+              {/* Category selector */}
+              <Text style={styles.inputLabel}>{t('noklai.caregiverHome.categoryLabel', 'Category')}</Text>
+              <View style={styles.categoriesRow}>
+                {REMINDER_CATEGORIES.map((cat) => {
+                  const isSelected = reminderCategory === cat.id;
+                  return (
+                    <TouchableOpacity
+                      key={cat.id}
+                      style={[
+                        styles.catOptionChip,
+                        {
+                          backgroundColor: isSelected
+                            ? cat.color
+                            : isDarkMode
+                            ? '#262D3D'
+                            : '#F3F4F6',
+                          borderColor: isSelected ? cat.color : isDarkMode ? '#374151' : '#E5E7EB',
+                        },
+                      ]}
+                      onPress={() => setReminderCategory(cat.id)}
+                    >
+                      <Ionicons
+                        name={cat.icon}
+                        size={14}
+                        color={isSelected ? '#FFFFFF' : cat.color}
+                        style={{ marginRight: 4 }}
+                      />
+                      <Text
+                        style={[
+                          styles.catOptionText,
+                          { color: isSelected ? '#FFFFFF' : isDarkMode ? '#E5E7EB' : '#374151' },
+                        ]}
+                      >
+                        {cat.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Time input */}
+              <Text style={[styles.inputLabel, { marginTop: 10 }]}>{t('noklai.patientHome.timeLabel', 'Time')}</Text>
               <TextInput
-                placeholder="e.g. 02:00 PM, Morning"
+                placeholder="08:30 AM"
                 placeholderTextColor="#9CA3AF"
                 value={reminderTime}
                 onChangeText={setReminderTime}
@@ -371,20 +492,49 @@ export default function PatientHomeScreen({
                   {
                     backgroundColor: isDarkMode ? '#283142' : '#F4F5F0',
                     color: isDarkMode ? '#F3F4F6' : '#1E242B',
+                    marginBottom: 8,
                   },
                 ]}
               />
 
+              {/* Quick time chips */}
+              <View style={styles.quickTimeRow}>
+                {['08:30 AM', '12:30 PM', '04:00 PM', '07:30 PM', '09:00 PM'].map((tChip) => (
+                  <TouchableOpacity
+                    key={tChip}
+                    onPress={() => setReminderTime(tChip)}
+                    style={[
+                      styles.quickTimeChip,
+                      reminderTime === tChip && {
+                        backgroundColor: '#16A34A',
+                        borderColor: '#16A34A',
+                      },
+                      { borderColor: isDarkMode ? '#374151' : '#E5E7EB' },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.quickTimeText,
+                        reminderTime === tChip && { color: '#FFFFFF', fontWeight: '700' },
+                        { color: reminderTime === tChip ? '#FFFFFF' : isDarkMode ? '#9CA3AF' : '#6B7280' },
+                      ]}
+                    >
+                      {tChip}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
               <View style={styles.modalButtonsRow}>
                 <NoklaiButton
-                  title="Cancel"
+                  title={t('noklai.patientHome.cancel', 'Cancel')}
                   variant="outline"
                   size="sm"
                   onPress={() => setAddModalVisible(false)}
                   style={{ flex: 1, marginRight: 8 }}
                 />
                 <NoklaiButton
-                  title="Save Reminder"
+                  title={t('noklai.patientHome.saveReminder', 'Save Reminder')}
                   variant="patient"
                   size="sm"
                   onPress={handleSaveReminder}
@@ -545,7 +695,6 @@ const styles = StyleSheet.create({
   routineRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingVertical: 14,
     paddingHorizontal: 16,
   },
@@ -553,18 +702,49 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E5E7EB',
   },
+  categoryIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
   routineTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 2,
   },
+  routineMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 3,
+  },
   routineTime: {
     fontSize: 12,
-    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  checkboxTouchTarget: {
+    padding: 6,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   deleteReminderBtn: {
-    padding: 6,
-    marginLeft: 8,
+    padding: 8,
+    marginLeft: 4,
   },
   emptyContainer: {
     padding: 24,
@@ -606,10 +786,15 @@ const styles = StyleSheet.create({
     borderRadius: noklaiTheme.radii.xxl,
     padding: 22,
   },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    marginBottom: 16,
   },
   inputLabel: {
     fontSize: 13,
@@ -622,7 +807,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
-    marginBottom: 14,
+    marginBottom: 12,
+  },
+  categoriesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 4,
+  },
+  catOptionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: noklaiTheme.radii.full,
+    borderWidth: 1,
+  },
+  catOptionText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  quickTimeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 16,
+  },
+  quickTimeChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  quickTimeText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   modalButtonsRow: {
     flexDirection: 'row',

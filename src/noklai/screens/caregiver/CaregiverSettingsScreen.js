@@ -41,48 +41,48 @@ export default function CaregiverSettingsScreen() {
     {
       id: 'profile',
       icon: 'person-circle-outline',
-      title: 'Edit Names & Mobile Numbers',
-      subtitle: 'Update caregiver and patient profiles',
+      title: t('noklai.settings.editProfiles', 'Edit Names & Mobile Numbers'),
+      subtitle: t('noklai.settings.editProfilesSub', 'Update caregiver and patient profiles'),
       onPress: () => setCurrentStep('login'),
     },
     {
       id: 'access',
       icon: 'people-outline',
-      title: 'Manage Caregiver Access',
-      subtitle: 'Invite secondary caregivers & family',
+      title: t('noklai.settings.manageAccess', 'Manage Caregiver Access'),
+      subtitle: t('noklai.settings.manageAccessSub', 'Invite secondary caregivers & family'),
       onPress: () => Alert.alert('Caregiver Access', 'You have primary administrator access.'),
     },
     {
       id: 'notifications',
       icon: 'notifications-outline',
-      title: 'Notification Preferences',
-      subtitle: 'Daily routine alerts & activity digests',
+      title: t('noklai.settings.notifications', 'Notification Preferences'),
+      subtitle: t('noklai.settings.notificationsSub', 'Daily routine alerts & activity digests'),
       onPress: () => Alert.alert('Notifications', 'Daily digest is enabled for 08:00 AM.'),
     },
     {
       id: 'privacy',
       icon: 'shield-checkmark-outline',
-      title: 'Privacy & Security',
-      subtitle: 'HIPAA/local data security & encryption',
+      title: t('noklai.settings.privacy', 'Privacy & Security'),
+      subtitle: t('noklai.settings.privacySub', 'HIPAA/local data security & encryption'),
       onPress: () => Alert.alert('Privacy & Security', 'All cognitive data is end-to-end encrypted and stored with user consent.'),
     },
     {
       id: 'about',
       icon: 'information-circle-outline',
-      title: 'About Noklai',
-      subtitle: 'Version 2.0 • Culturally-grounded Memory Assistant',
+      title: t('noklai.settings.about', 'About Noklai'),
+      subtitle: t('noklai.settings.aboutSub', 'Version 2.0 • Culturally-grounded Memory Assistant'),
       onPress: () => Alert.alert('About Noklai', 'Noklai - Our Culture. Their Memories. Always With Them.\nSIH 2026 Edition'),
     },
   ];
 
   const handleSignOut = () => {
     Alert.alert(
-      'Sign Out',
-      'Would you like to sign out and return to the welcome screen?',
+      t('noklai.settings.signOut', 'Sign Out'),
+      t('noklai.settings.signOutConfirm', 'Would you like to sign out and return to the welcome screen?'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('noklai.settings.cancel', 'Cancel'), style: 'cancel' },
         {
-          text: 'Sign Out',
+          text: t('noklai.settings.signOut', 'Sign Out'),
           style: 'destructive',
           onPress: async () => {
             if (signOut) {
@@ -107,7 +107,7 @@ export default function CaregiverSettingsScreen() {
         },
       ]}
     >
-      <NoklaiHeader title="Settings" showRoleBadge={false} />
+      <NoklaiHeader title={t('noklai.settings.title', 'Settings')} showRoleBadge={false} />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Profile Card */}
@@ -134,15 +134,15 @@ export default function CaregiverSettingsScreen() {
               {isPatient ? (activePatientName || 'Patient') : (caregiverName || 'Caregiver')}
             </Text>
             <Text style={styles.profileRoleText}>
-              {isPatient ? 'Patient Profile' : 'Primary Caregiver'}
+              {isPatient ? t('noklai.settings.patientProfile', 'Patient Profile') : t('noklai.settings.caregiverProfile', 'Primary Caregiver')}
               {isPatient
                 ? (patientPhone ? ` • ${patientPhone}` : '')
                 : (caregiverPhone ? ` • ${caregiverPhone}` : '')}
             </Text>
             <Text style={styles.profileCaringText}>
               {isPatient
-                ? `Connected Caregiver: ${caregiverName || 'Caregiver'}${caregiverPhone ? ` • ${caregiverPhone}` : ''}`
-                : `Supporting: ${activePatientName || 'Patient'}${patientPhone ? ` • ${patientPhone}` : ''}`}
+                ? `${t('noklai.settings.connectedCaregiver', 'Connected Caregiver: %{name}', { name: caregiverName || 'Caregiver' })}${caregiverPhone ? ` • ${caregiverPhone}` : ''}`
+                : `${t('noklai.settings.supporting', 'Supporting: %{name}', { name: activePatientName || 'Patient' })}${patientPhone ? ` • ${patientPhone}` : ''}`}
             </Text>
           </View>
         </View>
@@ -166,7 +166,7 @@ export default function CaregiverSettingsScreen() {
                   { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
                 ]}
               >
-                App Language
+                {t('noklai.settings.appLanguage', 'App Language')}
               </Text>
             </View>
             <LanguageSelector compact />
@@ -183,7 +183,7 @@ export default function CaregiverSettingsScreen() {
                   { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
                 ]}
               >
-                Dark Mode
+                {t('noklai.settings.darkMode', 'Dark Mode')}
               </Text>
             </View>
             <ThemeToggle />
@@ -207,12 +207,12 @@ export default function CaregiverSettingsScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.roleSwitchTitle, { color: isDarkMode ? (isPatient ? '#C4B5FD' : '#86EFAC') : (isPatient ? '#5B21B6' : '#14532D') }]}>
-              {isPatient ? 'Switch to Caregiver Mode' : 'Switch to Patient Mode'}
+              {isPatient ? t('noklai.settings.switchToCaregiver', 'Switch to Caregiver Mode') : t('noklai.settings.switchToPatient', 'Switch to Patient Mode')}
             </Text>
             <Text style={[styles.roleSwitchSub, { color: isDarkMode ? (isPatient ? '#DDD6FE' : '#BBF7D0') : (isPatient ? '#6D28D9' : '#166534') }]}>
               {isPatient
-                ? 'Monitor cognitive metrics, insights & activity updates'
-                : 'Experience the elder-friendly brain games & daily routine'}
+                ? t('noklai.settings.caregiverModeDesc', 'Monitor cognitive metrics, insights & activity updates')
+                : t('noklai.settings.patientModeDesc', 'Experience the elder-friendly brain games & daily routine')}
             </Text>
           </View>
           <Ionicons name="arrow-forward-circle" size={24} color={isPatient ? '#7C3AED' : '#16A34A'} />
@@ -264,7 +264,7 @@ export default function CaregiverSettingsScreen() {
           style={styles.signOutButton}
           activeOpacity={0.8}
         >
-          <Text style={styles.signOutText}>Sign Out</Text>
+          <Text style={styles.signOutText}>{t('noklai.settings.signOut', 'Sign Out')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

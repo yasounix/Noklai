@@ -25,7 +25,7 @@ export class SessionManager {
   /**
    * Starts a new game session
    */
-  startSession({ playerId = 'P001', gameType = 'dhop_khel', initialDifficulty = 'easy' } = {}) {
+  startSession({ playerId = null, gameType = 'dhop_khel', initialDifficulty = 'easy' } = {}) {
     const now = new Date().toISOString();
     const sessionId = this.createSessionId();
 
