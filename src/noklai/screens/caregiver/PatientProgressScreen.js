@@ -41,6 +41,7 @@ export default function PatientProgressScreen({ onBack }) {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'games' | 'history'
   const [doctor, setDoctor] = useState(null);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
+  const [showRemoveDoctorModal, setShowRemoveDoctorModal] = useState(false);
   const [doctorName, setDoctorName] = useState('');
   const [doctorPhone, setDoctorPhone] = useState('');
   const [doctorError, setDoctorError] = useState('');
@@ -84,24 +85,18 @@ export default function PatientProgressScreen({ onBack }) {
   };
 
   const handleRemoveDoctor = () => {
-    const remove = async () => {
-      try {
-        await AsyncStorage.removeItem(doctorStorageKey);
-        setDoctor(null);
-      } catch (error) {
-        Alert.alert('Remove Doctor', 'Unable to remove this doctor contact right now.');
-      }
-    };
+    setShowRemoveDoctorModal(true);
+  };
 
-    if (typeof window !== 'undefined' && window.confirm) {
-      if (window.confirm('Remove this doctor contact?')) remove();
-      return;
+  const confirmRemoveDoctor = async () => {
+    try {
+      await AsyncStorage.removeItem(doctorStorageKey);
+      setDoctor(null);
+      setShowRemoveDoctorModal(false);
+    } catch (error) {
+      setShowRemoveDoctorModal(false);
+      Alert.alert('Remove Doctor', 'Unable to remove this doctor contact right now.');
     }
-
-    Alert.alert('Remove Doctor', 'Remove this doctor contact?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: remove },
-    ]);
   };
 
   const handleCallDoctor = async () => {
@@ -350,6 +345,26 @@ export default function PatientProgressScreen({ onBack }) {
           </View>
         </View>
       </Modal>
+
+      <Modal visible={showRemoveDoctorModal} animationType="fade" transparent onRequestClose={() => setShowRemoveDoctorModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.doctorModal, { backgroundColor: isDarkMode ? '#1E232E' : '#FFFFFF' }]}>
+            <View style={styles.confirmationIconCircle}>
+              <Ionicons name="trash-outline" size={22} color="#DC2626" />
+            </View>
+            <Text style={[styles.modalTitle, styles.confirmationTitle, { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary }]}>Remove Doctor?</Text>
+            <Text style={[styles.confirmationMessage, { color: isDarkMode ? '#CBD5E1' : '#656F7D' }]}>This will remove the saved doctor contact from this patient’s profile.</Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowRemoveDoctorModal(false)} accessibilityRole="button" accessibilityLabel="Cancel remove doctor">
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.removeButton} onPress={confirmRemoveDoctor} accessibilityRole="button" accessibilityLabel="Confirm remove doctor">
+                <Text style={styles.callDoctorText}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -570,6 +585,23 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
   },
+  confirmationIconCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  confirmationTitle: {
+    marginBottom: 6,
+  },
+  confirmationMessage: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 18,
+  },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -624,5 +656,13 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     fontSize: 14,
     fontWeight: '600',
+  },
+  removeButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 12,
+    backgroundColor: '#DC2626',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
