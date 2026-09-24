@@ -26,10 +26,12 @@ import ActivityHistoryScreen from './screens/caregiver/ActivityHistoryScreen';
 import InsightsScreen from './screens/caregiver/InsightsScreen';
 import CaregiverAnalyticsScreen from '../screens/CaregiverAnalyticsScreen';
 import CaregiverSettingsScreen from './screens/caregiver/CaregiverSettingsScreen';
+import CaregiverMemoryScreen from './screens/caregiver/CaregiverMemoryScreen';
 
 // Patient Screens
 import PatientHomeScreen from './screens/patient/PatientHomeScreen';
 import PatientGamesScreen from './screens/patient/PatientGamesScreen';
+import PatientMemoryScreen from './screens/patient/PatientMemoryScreen';
 
 // AI Screen
 import NoklaiAIScreen from './screens/ai/NoklaiAIScreen';
@@ -95,7 +97,7 @@ function NoklaiShell() {
     }
   }
 
-  // Render Caregiver Tab Content
+  // Render Caregiver Tab Content (6 tabs: home, activity, ai, memory, insights, settings)
   const renderCaregiverContent = () => {
     switch (activeCaregiverTab) {
       case 'home':
@@ -104,6 +106,8 @@ function NoklaiShell() {
         return <ActivityHistoryScreen />;
       case 'ai':
         return <NoklaiAIScreen onClose={() => setActiveCaregiverTab('home')} />;
+      case 'memory':
+        return <CaregiverMemoryScreen />;
       case 'insights':
         return <CaregiverAnalyticsScreen />;
       case 'settings':
@@ -113,7 +117,7 @@ function NoklaiShell() {
     }
   };
 
-  // Render Patient Tab Content (Memories option completely removed)
+  // Render Patient Tab Content (5 tabs: home, games, ai, memory, settings - replaces insights)
   const renderPatientContent = () => {
     switch (activePatientTab) {
       case 'home':
@@ -125,19 +129,15 @@ function NoklaiShell() {
               setActivePatientTab('games');
             }}
             onOpenAI={() => setAiModalVisible(true)}
-            onNavigateToProgress={() => setActivePatientTab('insights')}
+            onNavigateToProgress={() => setActivePatientTab('memory')}
           />
         );
       case 'games':
         return <PatientGamesScreen onBack={() => setActivePatientTab('home')} />;
       case 'ai':
         return <NoklaiAIScreen onClose={() => setActivePatientTab('home')} />;
-      case 'insights':
-        return (
-          <InsightsScreen
-            onNavigateToGames={() => setActivePatientTab('games')}
-          />
-        );
+      case 'memory':
+        return <PatientMemoryScreen />;
       case 'settings':
         return <CaregiverSettingsScreen />;
       default:
@@ -149,7 +149,7 @@ function NoklaiShell() {
               setActivePatientTab('games');
             }}
             onOpenAI={() => setAiModalVisible(true)}
-            onNavigateToProgress={() => setActivePatientTab('insights')}
+            onNavigateToProgress={() => setActivePatientTab('memory')}
           />
         );
     }
@@ -157,20 +157,22 @@ function NoklaiShell() {
 
   const isCaregiver = role === 'caregiver';
 
+  // Exactly 6 tabs for Caregiver (keeps Insights as-is, adds Memory as 6th tab)
   const caregiverTabs = [
     { id: 'home', label: t('noklai.nav.home', 'Home'), icon: 'home', iconOutline: 'home-outline' },
     { id: 'activity', label: t('noklai.nav.updates', 'Updates'), icon: 'newspaper', iconOutline: 'newspaper-outline' },
     { id: 'ai', label: t('noklai.nav.aiHelper', 'AI Helper'), icon: 'sparkles', isSpecial: true },
+    { id: 'memory', label: t('noklai.nav.memory', 'Memory'), icon: 'images', iconOutline: 'images-outline' },
     { id: 'insights', label: t('noklai.nav.insights', 'Insights'), icon: 'bulb', iconOutline: 'bulb-outline' },
     { id: 'settings', label: t('noklai.nav.settings', 'Settings'), icon: 'person', iconOutline: 'person-outline' },
   ];
 
-  // 5 tabs with Noklai AI placed exactly in the middle (index 2)
+  // Exactly 5 tabs for Patient, replacing Insights with Memory (Noklai AI placed in middle)
   const patientTabs = [
     { id: 'home', label: t('noklai.nav.home', 'Home'), icon: 'home', iconOutline: 'home-outline' },
     { id: 'games', label: t('noklai.nav.games', 'Games'), icon: 'game-controller', iconOutline: 'game-controller-outline' },
     { id: 'ai', label: t('noklai.nav.noklaiAi', 'Noklai AI'), icon: 'sparkles', isSpecial: true },
-    { id: 'insights', label: t('noklai.nav.insights', 'Insights'), icon: 'bulb', iconOutline: 'bulb-outline' },
+    { id: 'memory', label: t('noklai.nav.memory', 'Memory'), icon: 'images', iconOutline: 'images-outline' },
     { id: 'settings', label: t('noklai.nav.settings', 'Settings'), icon: 'person', iconOutline: 'person-outline' },
   ];
 

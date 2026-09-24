@@ -18,12 +18,12 @@ export default function NoklaiHeader({
 }) {
   const { isDarkMode } = useTheme();
   const { t } = useLanguage();
-  const { role, setRole, setAiModalVisible } = useNoklai();
+  const { role, selectRole, setAiModalVisible } = useNoklai();
 
   const isCaregiver = role === 'caregiver';
 
   const toggleRole = () => {
-    setRole(isCaregiver ? 'patient' : 'caregiver');
+    selectRole(isCaregiver ? 'patient' : 'caregiver');
   };
 
   return (

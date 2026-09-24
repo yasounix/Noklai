@@ -19,6 +19,7 @@ import NoklaiButton from '../components/NoklaiButton';
 import NoklaiCard from '../components/NoklaiCard';
 import LanguageSelector from '../../components/LanguageSelector';
 import { validateLoginRequirements } from '../../utils/phoneValidation';
+import AuthModal from '../components/AuthModal';
 
 export default function NoklaiLoginScreen() {
   const { isDarkMode } = useTheme();
@@ -41,6 +42,7 @@ export default function NoklaiLoginScreen() {
   const [patientPhone, setPatientPhone] = useState(initialPatientPhone || '');
   const [patientGender, setPatientGender] = useState(initialPatientGender || 'female');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleContinue = async () => {
     const validation = validateLoginRequirements({
@@ -113,6 +115,30 @@ export default function NoklaiLoginScreen() {
             >
               {t('noklai.login.subtitle', 'Enter caregiver and patient details to personalize your memory care experience.')}
             </Text>
+          </View>
+
+          {/* Real Supabase Auth Trigger */}
+          <TouchableOpacity
+            style={styles.supabaseAuthBtn}
+            onPress={() => setShowAuthModal(true)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.authBtnIconWrap}>
+              <Ionicons name="lock-closed" size={18} color="#5B409E" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.supabaseAuthBtnTitle}>Sign In / Register with Email</Text>
+              <Text style={styles.supabaseAuthBtnSub}>Sync patient memory photos & caregiver link</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#5B409E" />
+          </TouchableOpacity>
+
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: isDarkMode ? '#374151' : '#E2E8F0' }]} />
+            <Text style={[styles.dividerText, { color: isDarkMode ? '#9CA3AF' : '#64748B' }]}>
+              OR CONTINUE LOCAL DEMO
+            </Text>
+            <View style={[styles.dividerLine, { backgroundColor: isDarkMode ? '#374151' : '#E2E8F0' }]} />
           </View>
 
           {errorMessage ? (
@@ -388,6 +414,14 @@ export default function NoklaiLoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <AuthModal
+        visible={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setCurrentStep('role_select');
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -503,6 +537,51 @@ const styles = StyleSheet.create({
   },
   genderText: {
     fontSize: 13,
+  },
+  supabaseAuthBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAF5FF',
+    borderWidth: 1.5,
+    borderColor: '#D8B4FE',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 16,
+    gap: 12,
+  },
+  authBtnIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EDE9FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  supabaseAuthBtnTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#5B409E',
+  },
+  supabaseAuthBtnSub: {
+    fontSize: 11,
+    color: '#7E22CE',
+    marginTop: 1,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });
 

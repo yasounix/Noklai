@@ -15,6 +15,13 @@
       "package": "com.yasounix.noklai",
       "versionCode": 1
     },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-localization"
+    ],
     "extra": {
       "eas": {
         "projectId": "e56e9347-2785-4382-b196-69eab4557d41"

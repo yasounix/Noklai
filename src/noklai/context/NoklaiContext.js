@@ -61,7 +61,14 @@ export function NoklaiProvider({ children }) {
   const [patientGender, setPatientGender] = useState('female');     // 'female' | 'male'
   const [hasCompletedSetup, setHasCompletedSetup] = useState(false);
 
+  // Supabase Auth Integration
+  const [authUser, setAuthUser] = useState(null);
+  const [authProfile, setAuthProfile] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
   const patientContextSyncedRef = useRef(false);
+  const roleRef = useRef(role);
+  roleRef.current = role;
 
   // Sync patientId once when PatientContext loads from storage without re-triggering loops
   useEffect(() => {
@@ -110,6 +117,82 @@ export function NoklaiProvider({ children }) {
   const [reminders, setReminders] = useState([]);
   const [loadingReminders, setLoadingReminders] = useState(true);
   const [analyticsData, setAnalyticsData] = useState(null);
+
+  // Sync Supabase Auth User Profile with self-healing fallback
+  const fetchUserProfile = useCallback(async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (data) {
+        setAuthProfile(data);
+        // Local-only: do NOT overwrite role if already stored locally
+        const localStoredRole = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_ROLE);
+        if (data.role && !localStoredRole) {
+          setRole(data.role);
+          await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_ROLE, data.role);
+        }
+        if (data.full_name) {
+          if (data.role === 'caregiver') setCaregiverName(data.full_name);
+          else setActivePatientName(data.full_name);
+        }
+        if (data.phone) {
+          if (data.role === 'caregiver') setCaregiverPhone(data.phone);
+          else setPatientPhone(data.phone);
+        }
+      } else {
+        // Self-healing guard: if profiles row is missing
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          const userMeta = userData.user.user_metadata || {};
+          const fallbackProfile = {
+            id: userId,
+            role: userMeta.role || roleRef.current || 'patient',
+            full_name: userMeta.full_name || 'NOKLAI User',
+            phone: userMeta.phone || null,
+            preferred_language: currentLanguage || 'en',
+          };
+          await supabase.from('profiles').upsert(fallbackProfile);
+          setAuthProfile(fallbackProfile);
+        }
+      }
+    } catch (err) {
+      console.warn('Error syncing Supabase user profile:', err);
+    }
+  }, [currentLanguage]);
+
+  const fetchUserProfileRef = useRef(fetchUserProfile);
+  fetchUserProfileRef.current = fetchUserProfile;
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      setAuthLoading(false);
+      setAuthUser(session?.user || null);
+      if (session?.user) {
+        fetchUserProfileRef.current(session.user.id);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+      setAuthUser(session?.user || null);
+      if (session?.user) {
+        await fetchUserProfileRef.current(session.user.id);
+      } else {
+        setAuthProfile(null);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription?.unsubscribe();
+    };
+  }, []);
   const [allSessions, setAllSessions] = useState([]);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(true);
 
@@ -465,10 +548,15 @@ export function NoklaiProvider({ children }) {
   // Sign out cleanly to isolate user sessions
   const signOut = useCallback(async () => {
     try {
+      await supabase.auth.signOut();
+    } catch (e) {}
+    try {
       await AsyncStorage.multiRemove([
         STORAGE_KEYS.CURRENT_ROLE,
       ]);
     } catch (e) {}
+    setAuthUser(null);
+    setAuthProfile(null);
     setRole(null);
     setCurrentStep('launch');
     setActiveCaregiverSubScreen(null);
@@ -941,6 +1029,11 @@ export function NoklaiProvider({ children }) {
     signOut,
     allSessions,
 
+    // Supabase Auth
+    authUser,
+    authProfile,
+    authLoading,
+
     isDarkMode,
   }), [
     currentStep,
@@ -983,6 +1076,9 @@ export function NoklaiProvider({ children }) {
     linkPatientByInviteCode,
     signOut,
     allSessions,
+    authUser,
+    authProfile,
+    authLoading,
     isDarkMode,
   ]);
 

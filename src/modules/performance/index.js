@@ -10,4 +10,7 @@ export * from './SupabasePerformanceService.js';
 export * from './PerformanceTracker.js';
 export * from './CognitiveAnalyticsService.js';
 export * from './CognitiveVitalityIndex.js';
+export * from './gameRegistry.js';
+export * from './DriftDetector.js';
+export * from '../LocalPerformanceStorage.js';
 export * from '../../games/suhTahLam/storage/LocalPerformanceStorage.js';
