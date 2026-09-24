@@ -85,9 +85,19 @@ export default function PatientProgressScreen({ onBack }) {
 
   const handleRemoveDoctor = () => {
     const remove = async () => {
-      await AsyncStorage.removeItem(doctorStorageKey);
-      setDoctor(null);
+      try {
+        await AsyncStorage.removeItem(doctorStorageKey);
+        setDoctor(null);
+      } catch (error) {
+        Alert.alert('Remove Doctor', 'Unable to remove this doctor contact right now.');
+      }
     };
+
+    if (typeof window !== 'undefined' && window.confirm) {
+      if (window.confirm('Remove this doctor contact?')) remove();
+      return;
+    }
+
     Alert.alert('Remove Doctor', 'Remove this doctor contact?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Remove', style: 'destructive', onPress: remove },
