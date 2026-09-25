@@ -21,6 +21,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { usePatient } from '../context/PatientContext';
 import NoklaiContext from '../noklai/context/NoklaiContext';
 import NoklaiHeader from '../noklai/components/NoklaiHeader';
+import CaregiverContactButton from '../noklai/components/CaregiverContactButton';
 import { cognitiveAnalytics, COGNITIVE_DOMAINS } from '../modules/performance/CognitiveAnalyticsService';
 import { callPhone } from '../utils/callService';
 import { normalizeIndianPhone } from '../utils/phoneValidation';
@@ -225,7 +226,17 @@ export default function CaregiverAnalyticsScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
-      <NoklaiHeader title={t('nav.insights', 'Insights')} />
+      <NoklaiHeader
+        title={t('nav.insights', 'Insights')}
+        showRoleBadge={false}
+        rightAction={(
+          <CaregiverContactButton
+            doctor={doctor}
+            onAddDoctor={openDoctorForm}
+            onCallDoctor={handleCallDoctor}
+          />
+        )}
+      />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={theme.primary} />}

@@ -18,6 +18,7 @@ import { useNoklai } from '../../context/NoklaiContext';
 import { StatGrid } from '../../components/StatTile';
 import QuoteCard from '../../components/QuoteCard';
 import NoklaiHeader from '../../components/NoklaiHeader';
+import CaregiverContactButton from '../../components/CaregiverContactButton';
 import NoklaiButton from '../../components/NoklaiButton';
 import GamePerformanceScreen from './GamePerformanceScreen';
 import ActivityHistoryScreen from './ActivityHistoryScreen';
@@ -122,8 +123,16 @@ export default function PatientProgressScreen({ onBack }) {
     >
       <NoklaiHeader
         showBack
+        showRoleBadge={false}
         onBack={onBack || (() => setActiveCaregiverSubScreen(null))}
         title={`${activePatientName}'s Progress`}
+        rightAction={(
+          <CaregiverContactButton
+            doctor={doctor}
+            onAddDoctor={openDoctorForm}
+            onCallDoctor={handleCallDoctor}
+          />
+        )}
       />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -267,33 +276,6 @@ export default function PatientProgressScreen({ onBack }) {
                   ]}
                 />
               </View>
-            </View>
-
-            <View style={[styles.doctorCard, { backgroundColor: isDarkMode ? '#1E232E' : '#FFFFFF', borderColor: isDarkMode ? '#2D3545' : '#E8EAE3' }]}>
-              <View style={styles.doctorHeader}>
-                <View style={styles.doctorIconCircle}><Ionicons name="medkit-outline" size={18} color="#2563EB" /></View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.doctorTitle, { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary }]}>Doctor Contact</Text>
-                  <Text style={styles.doctorSub}>Keep a trusted clinician ready to reach.</Text>
-                </View>
-              </View>
-              {doctor ? (
-                <View style={styles.savedDoctor}>
-                  <Text style={[styles.doctorName, { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary }]}>{doctor.name}</Text>
-                  <Text style={styles.doctorPhone}>+91 {doctor.phone.slice(0, 5)} {doctor.phone.slice(5)}</Text>
-                  <View style={styles.doctorActions}>
-                    <TouchableOpacity style={styles.callDoctorButton} onPress={handleCallDoctor} accessibilityRole="button" accessibilityLabel={`Call Doctor ${doctor.name}`}>
-                      <Ionicons name="call-outline" size={18} color="#FFFFFF" /><Text style={styles.callDoctorText}>Call Doctor</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.doctorSmallButton} onPress={openDoctorForm} accessibilityLabel="Edit Doctor"><Ionicons name="create-outline" size={18} color="#2563EB" /><Text style={styles.doctorSmallText}>Edit</Text></TouchableOpacity>
-                    <TouchableOpacity style={styles.doctorSmallButton} onPress={handleRemoveDoctor} accessibilityLabel="Remove Doctor"><Ionicons name="trash-outline" size={18} color="#DC2626" /><Text style={[styles.doctorSmallText, { color: '#DC2626' }]}>Remove</Text></TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <TouchableOpacity style={styles.callDoctorButton} onPress={openDoctorForm} accessibilityRole="button" accessibilityLabel="Add Doctor">
-                  <Ionicons name="person-add-outline" size={18} color="#FFFFFF" /><Text style={styles.callDoctorText}>Add Doctor</Text>
-                </TouchableOpacity>
-              )}
             </View>
 
             {/* AI Assistant Insight Action */}
