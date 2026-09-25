@@ -149,14 +149,14 @@ export const isGeminiConfigured = () => {
  * @param {string} params.message - The latest user message
  * @param {Array} params.history - Array of previous messages [{ sender: 'user'|'ai', text: string }]
  * @param {Object} params.context - Authorized patient and caregiver context object
- * @param {string} [params.model='gemini-2.0-flash'] - Target model name
+ * @param {string} [params.model='gemini-3.8-flash'] - Target model name
  * @returns {Promise<{ success: boolean, text?: string, error?: string, message?: string }>}
  */
 export const sendGeminiChatMessage = async ({
   message,
   history = [],
   context = {},
-  model = 'gemini-2.0-flash',
+  model = 'gemini-3.8-flash',
   signal,
 } = {}) => {
   const cleanMessage = typeof message === 'string' ? message.trim() : '';
@@ -180,7 +180,7 @@ export const sendGeminiChatMessage = async ({
 
   const targetModel = typeof model === 'string' && /^[a-zA-Z0-9._-]{1,100}$/.test(model)
     ? model
-    : 'gemini-2.0-flash';
+    : 'gemini-3.8-flash';
   const apiKey = getApiKey();
   if (!apiKey) {
     return {
@@ -226,7 +226,7 @@ export const sendGeminiAudioMessage = async ({
   mimeType = 'audio/m4a',
   history = [],
   context = {},
-  model = 'gemini-2.0-flash',
+  model = 'gemini-3.8-flash',
   signal,
 } = {}) => {
   if (typeof audioBase64 !== 'string' || audioBase64.length < 10) {
@@ -245,10 +245,12 @@ export const sendGeminiAudioMessage = async ({
     };
   }
 
-  const targetModel = typeof model === 'string' && /^[a-zA-Z0-9._-]{1,100}$/.test(model)
+  const targetModel =
+  typeof model === 'string' && /^[a-zA-Z0-9._-]{1,100}$/.test(model)
     ? model
-    : 'gemini-2.0-flash';
-  const apiKey = getApiKey();
+    : 'gemini-3.8-flash';
+
+const apiKey = getApiKey();
   if (!apiKey) {
     return {
       success: false,
@@ -312,9 +314,13 @@ const runGeminiRequest = async (requestBody, signal, targetModel) => {
   });
 
   const fetchWithTimeout = async (targetModel) => {
+    console.log("🔥 ACTUAL GEMINI MODEL:", targetModel);
+  
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
+  
     const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
     let timedOut = false;
+
     const timeoutId = setTimeout(() => {
       timedOut = true;
       controller?.abort();
@@ -338,7 +344,6 @@ const runGeminiRequest = async (requestBody, signal, targetModel) => {
   };
 
   const modelCandidates = [targetModel];
-  if (targetModel !== 'gemini-1.5-flash') modelCandidates.push('gemini-1.5-flash');
 
   try {
     for (let modelIndex = 0; modelIndex < modelCandidates.length; modelIndex += 1) {
@@ -370,17 +375,16 @@ const runGeminiRequest = async (requestBody, signal, targetModel) => {
 
         if (response.status === 404 && modelIndex === 0 && modelCandidates.length > 1) break;
         if (!response.ok) {
-          if (isTransientStatus(response.status) && attempt + 1 < maxAttempts) {
-            await wait(retryDelay(attempt));
-            continue;
-          }
-          if (response.status === 429) {
-            return { success: false, error: 'RATE_LIMIT', message: 'Noklai AI is busy right now. Please wait a moment and try again.' };
-          }
-          if (response.status === 400 || response.status === 403) {
-            return { success: false, error: 'AUTH_ERROR', message: 'Noklai could not authenticate this request. Please check the service configuration.' };
-          }
-          return { success: false, error: 'API_ERROR', message: 'Noklai encountered a service error. Please try again.' };
+          const errorText = await response.text();
+        
+          console.error("GEMINI ERROR STATUS:", response.status);
+          console.error("GEMINI ERROR BODY:", errorText);
+        
+          return {
+            success: false,
+            error: `HTTP_${response.status}`,
+            message: `Gemini API Error ${response.status}: ${errorText}`,
+          };
         }
 
         let data;
