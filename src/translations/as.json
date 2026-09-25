@@ -6,6 +6,10 @@
     "memories": "পৰিয়াল",
     "ai": "সহায়ক"
   },
+  "callPatient": "ৰোগীক ফোন কৰক",
+  "callCaregiver": "যত্নকৰ্তাক ফোন কৰক",
+  "callUnavailable": "ফোন উপলব্ধ নাই",
+  "callNumberMissing": "কোনো বৈধ যোগাযোগ নম্বৰ উপলব্ধ নাই।",
   "analytics": {
     "loading": "জ্ঞানমূলক স্বাস্থ্য বিশ্লেষণ লোড হৈ আছে...",
     "defaultPatient": "বয়োজ্যেষ্ঠ ৰোগী",

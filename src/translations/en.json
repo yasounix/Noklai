@@ -6,6 +6,10 @@
     "memories": "Family",
     "ai": "Assistant"
   },
+  "callPatient": "Call Patient",
+  "callCaregiver": "Call Caregiver",
+  "callUnavailable": "Call unavailable",
+  "callNumberMissing": "A valid contact number is not available.",
   "analytics": {
     "loading": "Loading cognitive health analytics...",
     "defaultPatient": "Elder Patient",

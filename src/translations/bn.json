@@ -6,6 +6,10 @@
     "memories": "পরিবার",
     "ai": "সহায়ক"
   },
+  "callPatient": "রোগীকে কল করুন",
+  "callCaregiver": "যত্নকারীকে কল করুন",
+  "callUnavailable": "কল উপলব্ধ নয়",
+  "callNumberMissing": "কোনো বৈধ যোগাযোগ নম্বর পাওয়া যায়নি।",
   "analytics": {
     "loading": "জ্ঞানমূলক স্বাস্থ্য বিশ্লেষণ লোড হচ্ছে...",
     "defaultPatient": "বয়স্ক রোগী",

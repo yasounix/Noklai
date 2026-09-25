@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useContext } from 're
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
@@ -10,14 +11,22 @@ import {
   RefreshControl,
   Modal,
   Platform,
+  Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePatient } from '../context/PatientContext';
 import NoklaiContext from '../noklai/context/NoklaiContext';
+import NoklaiHeader from '../noklai/components/NoklaiHeader';
+import CaregiverContactButton from '../noklai/components/CaregiverContactButton';
 import { cognitiveAnalytics, COGNITIVE_DOMAINS } from '../modules/performance/CognitiveAnalyticsService';
+import { callPhone } from '../utils/callService';
+import { normalizeIndianPhone } from '../utils/phoneValidation';
+
+const DOCTOR_STORAGE_PREFIX = '@caregiver_doctor_';
 
 export default function CaregiverAnalyticsScreen() {
   const { theme, isDarkMode } = useTheme();
@@ -38,6 +47,95 @@ export default function CaregiverAnalyticsScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [copiedNotice, setCopiedNotice] = useState(false);
+  const [doctor, setDoctor] = useState(null);
+  const [showDoctorModal, setShowDoctorModal] = useState(false);
+  const [doctorName, setDoctorName] = useState('');
+  const [doctorPhone, setDoctorPhone] = useState('');
+  const [doctorError, setDoctorError] = useState('');
+
+  const doctorStorageKey = `${DOCTOR_STORAGE_PREFIX}${patientId}`;
+
+  useEffect(() => {
+    let isMounted = true;
+    AsyncStorage.getItem(doctorStorageKey)
+      .then((storedDoctor) => {
+        if (!isMounted) return;
+        if (!storedDoctor) {
+          setDoctor(null);
+          return;
+        }
+        try {
+          const parsedDoctor = JSON.parse(storedDoctor);
+          setDoctor(parsedDoctor?.name && parsedDoctor?.phone ? parsedDoctor : null);
+        } catch (error) {
+          setDoctor(null);
+        }
+      })
+      .catch((error) => console.warn('Error loading doctor contact:', error));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [doctorStorageKey]);
+
+  const openDoctorForm = () => {
+    setDoctorName(doctor?.name || '');
+    setDoctorPhone(doctor?.phone || '');
+    setDoctorError('');
+    setShowDoctorModal(true);
+  };
+
+  const handleSaveDoctor = async () => {
+    const trimmedName = doctorName.trim();
+    const normalizedPhone = normalizeIndianPhone(doctorPhone);
+    if (!trimmedName) {
+      setDoctorError('Please enter the doctor\'s name.');
+      return;
+    }
+    if (!normalizedPhone) {
+      setDoctorError('Please enter a valid 10-digit Indian mobile number.');
+      return;
+    }
+
+    const savedDoctor = { name: trimmedName, phone: normalizedPhone };
+    try {
+      await AsyncStorage.setItem(doctorStorageKey, JSON.stringify(savedDoctor));
+      setDoctor(savedDoctor);
+      setShowDoctorModal(false);
+      setDoctorError('');
+    } catch (error) {
+      setDoctorError('Unable to save this doctor right now. Please try again.');
+    }
+  };
+
+  const handleRemoveDoctor = () => {
+    const remove = async () => {
+      try {
+        await AsyncStorage.removeItem(doctorStorageKey);
+        setDoctor(null);
+      } catch (error) {
+        Alert.alert('Remove Doctor', 'Unable to remove this doctor right now.');
+      }
+    };
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm('Remove this doctor contact?')) remove();
+    } else {
+      Alert.alert('Remove Doctor', 'Remove this doctor contact?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: remove },
+      ]);
+    }
+  };
+
+  const handleCallDoctor = async () => {
+    if (!doctor?.phone) return;
+    try {
+      const opened = await callPhone(doctor.phone);
+      if (!opened) throw new Error('No valid phone URL');
+    } catch (error) {
+      Alert.alert('Calling unavailable', `Unable to open the phone dialer for ${doctor.name}.`);
+    }
+  };
 
   // Patient info object for analytics calculations
   const patientInfo = useMemo(() => ({
@@ -128,6 +226,17 @@ export default function CaregiverAnalyticsScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <NoklaiHeader
+        title={t('nav.insights', 'Insights')}
+        showRoleBadge={false}
+        rightAction={(
+          <CaregiverContactButton
+            doctor={doctor}
+            onAddDoctor={openDoctorForm}
+            onCallDoctor={handleCallDoctor}
+          />
+        )}
+      />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
@@ -331,6 +440,67 @@ export default function CaregiverAnalyticsScreen() {
                 </Text>
               </View>
             </View>
+          )}
+        </View>
+
+        {/* SECTION 2: Doctor Contact */}
+        <View style={[styles.doctorCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
+          <View style={styles.doctorHeader}>
+            <View style={[styles.doctorIconWrap, { backgroundColor: isDarkMode ? '#1E3A8A' : '#EFF6FF' }]}>
+              <Ionicons name="medkit-outline" size={20} color="#2563EB" />
+            </View>
+            <View style={styles.doctorHeadingText}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>Doctor Contact</Text>
+              <Text style={[styles.sectionSub, { color: theme.subText }]}>Keep a trusted clinician ready to reach.</Text>
+            </View>
+          </View>
+
+          {doctor ? (
+            <View style={styles.savedDoctorContent}>
+              <Text style={[styles.doctorName, { color: theme.text }]}>{doctor.name}</Text>
+              <Text style={[styles.doctorPhone, { color: theme.subText }]}>+91 {doctor.phone.slice(0, 5)} {doctor.phone.slice(5)}</Text>
+              <View style={styles.doctorActions}>
+                <TouchableOpacity
+                  style={[styles.primaryActionBtn, styles.doctorCallBtn, { backgroundColor: theme.primary || '#2563EB' }]}
+                  onPress={handleCallDoctor}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Call Doctor ${doctor.name}`}
+                >
+                  <Ionicons name="call-outline" size={19} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.primaryActionBtnText}>Call Doctor</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.doctorTextAction, { borderColor: theme.cardBorder }]}
+                  onPress={openDoctorForm}
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit Doctor"
+                >
+                  <Ionicons name="create-outline" size={18} color={theme.text} />
+                  <Text style={[styles.doctorTextActionLabel, { color: theme.text }]}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.doctorTextAction, { borderColor: theme.cardBorder }]}
+                  onPress={handleRemoveDoctor}
+                  accessibilityRole="button"
+                  accessibilityLabel="Remove Doctor"
+                >
+                  <Ionicons name="trash-outline" size={18} color="#DC2626" />
+                  <Text style={[styles.doctorTextActionLabel, { color: '#DC2626' }]}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[styles.primaryActionBtn, { backgroundColor: theme.primary || '#2563EB' }]}
+              onPress={openDoctorForm}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Add Doctor"
+            >
+              <Ionicons name="person-add-outline" size={19} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.primaryActionBtnText}>Add Doctor</Text>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -590,6 +760,73 @@ export default function CaregiverAnalyticsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Modal: Doctor Contact Form */}
+      <Modal visible={showDoctorModal} animationType="slide" transparent onRequestClose={() => setShowDoctorModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="medkit-outline" size={22} color="#2563EB" style={{ marginRight: 8 }} />
+                <Text style={[styles.modalTitle, { color: theme.text }]}>{doctor ? 'Edit Doctor' : 'Add Doctor'}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowDoctorModal(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel doctor form"
+              >
+                <Ionicons name="close-circle" size={26} color={theme.subText} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.doctorFormBody}>
+              <Text style={[styles.formLabel, { color: theme.text }]}>Doctor's name</Text>
+              <TextInput
+                value={doctorName}
+                onChangeText={(value) => { setDoctorName(value); setDoctorError(''); }}
+                placeholder="Enter doctor's name"
+                placeholderTextColor={theme.subText}
+                style={[styles.formInput, { color: theme.text, borderColor: doctorError ? '#DC2626' : theme.cardBorder }]}
+                autoCapitalize="words"
+                accessibilityLabel="Doctor's name"
+              />
+              <Text style={[styles.formLabel, { color: theme.text }]}>Doctor's phone number</Text>
+              <TextInput
+                value={doctorPhone}
+                onChangeText={(value) => { setDoctorPhone(value); setDoctorError(''); }}
+                placeholder="10-digit mobile number"
+                placeholderTextColor={theme.subText}
+                style={[styles.formInput, { color: theme.text, borderColor: doctorError ? '#DC2626' : theme.cardBorder }]}
+                keyboardType="phone-pad"
+                textContentType="telephoneNumber"
+                accessibilityLabel="Doctor's phone number"
+              />
+              {!!doctorError && <Text style={styles.formError} accessibilityRole="alert">{doctorError}</Text>}
+            </View>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.modalShareBtn, { backgroundColor: theme.primary || '#2563EB' }]}
+                onPress={handleSaveDoctor}
+                accessibilityRole="button"
+                accessibilityLabel="Save doctor"
+              >
+                <Ionicons name="save-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Text style={styles.modalShareBtnText}>Save</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalCloseBtn, { backgroundColor: isDarkMode ? '#374151' : '#E5E7EB' }]}
+                onPress={() => setShowDoctorModal(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel doctor form"
+              >
+                <Text style={[styles.modalCloseBtnText, { color: theme.text }]}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -755,6 +992,65 @@ const styles = StyleSheet.create({
   vitalityExplanation: {
     fontSize: 12,
     lineHeight: 17,
+  },
+  doctorCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 18,
+    marginBottom: 16,
+    elevation: 2,
+  },
+  doctorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  doctorIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  doctorHeadingText: {
+    flex: 1,
+  },
+  savedDoctorContent: {
+    paddingLeft: 48,
+  },
+  doctorName: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  doctorPhone: {
+    fontSize: 14,
+    marginTop: 3,
+  },
+  doctorActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 12,
+  },
+  doctorCallBtn: {
+    flex: 1,
+    minWidth: 145,
+  },
+  doctorTextAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 46,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  doctorTextActionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 4,
   },
   vitalSignsGrid: {
     flexDirection: 'row',
@@ -933,6 +1229,28 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: 16,
+  },
+  doctorFormBody: {
+    padding: 16,
+  },
+  formLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  formInput: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    marginBottom: 14,
+  },
+  formError: {
+    color: '#DC2626',
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: -4,
   },
   reportCodeText: {
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',

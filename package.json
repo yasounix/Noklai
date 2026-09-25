@@ -28,7 +28,7 @@
     "android": "npx expo start --android",
     "ios": "npx expo start --ios",
     "web": "npx expo start --web",
-    "test": "node --test scripts/test_game_registry.mjs scripts/test_performancetracker_import.mjs scripts/test_memory_and_speech.mjs"
+  "test": "node --test scripts/test_call_action.mjs scripts/test_game_registry.mjs scripts/test_performancetracker_import.mjs scripts/test_memory_and_speech.mjs"
   },
   "private": true,
   "devDependencies": {

@@ -6,6 +6,10 @@
     "memories": "परिवार",
     "ai": "सहायक"
   },
+  "callPatient": "मरीज़ को कॉल करें",
+  "callCaregiver": "देखभालकर्ता को कॉल करें",
+  "callUnavailable": "कॉल उपलब्ध नहीं है",
+  "callNumberMissing": "कोई मान्य संपर्क नंबर उपलब्ध नहीं है।",
   "analytics": {
     "loading": "संज्ञानात्मक स्वास्थ्य विश्लेषण लोड हो रहा है...",
     "defaultPatient": "वरिष्ठ मरीज़",
