@@ -18,7 +18,7 @@ import { noklaiTheme } from '../../theme/noklaiTheme';
 import { useTheme } from '../../../context/ThemeContext';
 import { useLanguage } from '../../../context/LanguageContext';
 import { useNoklai } from '../../context/NoklaiContext';
-import { getAIResponseAsync, getAIResponse } from '../../../modules/aiData';
+import { getAIResponseAsync } from '../../../modules/aiData';
 import { isGeminiConfigured } from '../../../services/GeminiService';
 
 export default function NoklaiAIScreen({ onClose }) {
@@ -238,7 +238,7 @@ export default function NoklaiAIScreen({ onClose }) {
     }
 
     const context = {
-      patientId: activePatientId || 'P001',
+      patientId: activePatientId ,
       patientName: learnedName || pName,
       learnedName: learnedName,
       caregiverName: cName,

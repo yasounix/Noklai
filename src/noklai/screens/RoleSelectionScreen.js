@@ -4,10 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../theme/noklaiTheme';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useNoklai } from '../context/NoklaiContext';
+import LanguageSelector from '../../components/LanguageSelector';
 
 export default function RoleSelectionScreen() {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
   const {
     selectRole,
     setCurrentStep,
@@ -29,8 +32,8 @@ export default function RoleSelectionScreen() {
       ]}
     >
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Top bar with back button */}
-        <View style={styles.topBar}>
+        {/* Top bar with back button and LanguageSelector */}
+        <View style={[styles.topBar, { justifyContent: 'space-between', flexDirection: 'row', alignItems: 'center' }]}>
           <TouchableOpacity
             onPress={() => setCurrentStep('launch')}
             style={styles.backButton}
@@ -42,6 +45,7 @@ export default function RoleSelectionScreen() {
               color={isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary}
             />
           </TouchableOpacity>
+          <LanguageSelector compact />
         </View>
 
         {/* Title and Subtitle */}
@@ -60,7 +64,7 @@ export default function RoleSelectionScreen() {
               { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
             ]}
           >
-            Welcome to NOKLAI
+            {t('noklai.roleSelect.welcome', 'Welcome to NOKLAI')}
           </Text>
           <Text
             style={[
@@ -68,7 +72,7 @@ export default function RoleSelectionScreen() {
               { color: isDarkMode ? noklaiTheme.colors.textSecondaryDark : noklaiTheme.colors.textSecondary },
             ]}
           >
-            A culturally familiar memory assistance platform for elderly people and their caregivers.
+            {t('noklai.roleSelect.subtitle', 'A culturally familiar memory assistance platform for elderly people and their caregivers.')}
           </Text>
         </View>
 
@@ -87,7 +91,7 @@ export default function RoleSelectionScreen() {
               !isDarkMode && noklaiTheme.shadows.card,
             ]}
             accessibilityRole="button"
-            accessibilityLabel="I am a Patient. Play memory games, talk with Noklai, and enjoy familiar stories"
+            accessibilityLabel={`${t('noklai.roleSelect.patientCardTitle', 'I am a Patient')}. ${t('noklai.roleSelect.patientCardSub', 'Play memory games, talk with Noklai, and enjoy familiar stories')}`}
           >
             <View style={[styles.avatarCircle, { backgroundColor: '#FEF3C7' }]}>
               <Text style={styles.avatarEmoji}>{patientAvatar}</Text>
@@ -101,7 +105,7 @@ export default function RoleSelectionScreen() {
                     { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
                   ]}
                 >
-                  I am a Patient
+                  {t('noklai.roleSelect.patientCardTitle', 'I am a Patient')}
                 </Text>
                 <Ionicons
                   name="chevron-forward"
@@ -115,7 +119,7 @@ export default function RoleSelectionScreen() {
                   { color: isDarkMode ? '#CBD5E1' : '#4B5563' },
                 ]}
               >
-                Play memory games, talk with Noklai, and enjoy familiar stories
+                {t('noklai.roleSelect.patientCardSub', 'Play memory games, talk with Noklai, and enjoy familiar stories')}
               </Text>
               {activePatientName && activePatientName !== 'Patient' && (
                 <Text style={styles.activeProfileTag}>Profile: {activePatientName}</Text>
@@ -136,7 +140,7 @@ export default function RoleSelectionScreen() {
               !isDarkMode && noklaiTheme.shadows.card,
             ]}
             accessibilityRole="button"
-            accessibilityLabel="I am a Caregiver. View progress, check activity history, and support your loved one"
+            accessibilityLabel={`${t('noklai.roleSelect.caregiverCardTitle', 'I am a Caregiver')}. ${t('noklai.roleSelect.caregiverCardSub', 'View progress, check activity history, and support your loved one')}`}
           >
             <View style={[styles.avatarCircle, { backgroundColor: '#EDE9FE' }]}>
               <Text style={styles.avatarEmoji}>{caregiverAvatar}</Text>
@@ -150,7 +154,7 @@ export default function RoleSelectionScreen() {
                     { color: isDarkMode ? noklaiTheme.colors.textPrimaryDark : noklaiTheme.colors.textPrimary },
                   ]}
                 >
-                  I am a Caregiver
+                  {t('noklai.roleSelect.caregiverCardTitle', 'I am a Caregiver')}
                 </Text>
                 <Ionicons
                   name="chevron-forward"
@@ -164,7 +168,7 @@ export default function RoleSelectionScreen() {
                   { color: isDarkMode ? '#CBD5E1' : '#4B5563' },
                 ]}
               >
-                View progress, check activity history, and support your loved one
+                {t('noklai.roleSelect.caregiverCardSub', 'View progress, check activity history, and support your loved one')}
               </Text>
               {caregiverName && caregiverName !== 'Caregiver' && (
                 <Text style={styles.activeProfileTag}>Profile: {caregiverName}</Text>
@@ -177,7 +181,7 @@ export default function RoleSelectionScreen() {
         <View style={styles.footerNote}>
           <Ionicons name="information-circle-outline" size={16} color="#656F7D" style={{ marginRight: 6 }} />
           <Text style={[styles.footerText, { color: isDarkMode ? '#9CA3AF' : '#656F7D' }]}>
-            You can easily switch roles at any time in the app.
+            {t('noklai.roleSelect.footerNote', 'You can easily switch roles at any time in the app.')}
           </Text>
         </View>
       </ScrollView>

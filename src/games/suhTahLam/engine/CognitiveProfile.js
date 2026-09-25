@@ -17,7 +17,7 @@ const VALID_DOMAINS = ['visual', 'sequence', 'spatial', 'change', 'movement'];
 
 export class CognitiveProfile {
   constructor(initialData = {}) {
-    this.playerId = initialData.playerId || null;
+    this.playerId = initialData.playerId ;
     this.totalRounds = typeof initialData.totalRounds === 'number' ? initialData.totalRounds : 0;
     this.totalAttempts = typeof initialData.totalAttempts === 'number' ? initialData.totalAttempts : 0;
     this.totalCorrectAttempts =
@@ -40,7 +40,7 @@ export class CognitiveProfile {
     this.sampleCount =
       typeof initialData.sampleCount === 'number' ? initialData.sampleCount : this.totalRounds;
     this.hasEnoughData = Boolean(initialData.hasEnoughData ?? (this.sampleCount >= 3));
-    this.updatedAt = initialData.updatedAt || null;
+    this.updatedAt = initialData.updatedAt ;
 
     // Validate and clean initial domain history
     const rawHistory = initialData.domainHistory || {};

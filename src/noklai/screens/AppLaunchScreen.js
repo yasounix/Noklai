@@ -12,11 +12,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { noklaiTheme } from '../theme/noklaiTheme';
 import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useNoklai } from '../context/NoklaiContext';
 import NoklaiButton from '../components/NoklaiButton';
+import LanguageSelector from '../../components/LanguageSelector';
 
 export default function AppLaunchScreen() {
   const { isDarkMode } = useTheme();
+  const { t } = useLanguage();
   const { width, height } = useWindowDimensions();
   const { setCurrentStep, selectRole, hasCompletedSetup } = useNoklai();
 
@@ -55,18 +58,21 @@ export default function AppLaunchScreen() {
             },
           ]}
         >
-          <View style={styles.logoRow}>
-            <View style={styles.logoBadge}>
-              <Ionicons name="leaf" size={24} color="#16A34A" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <View style={styles.logoRow}>
+              <View style={styles.logoBadge}>
+                <Ionicons name="leaf" size={24} color="#16A34A" />
+              </View>
+              <Text
+                style={[
+                  styles.logoTitle,
+                  { color: isDarkMode ? '#4ADE80' : '#15803D' },
+                ]}
+              >
+                Noklai
+              </Text>
             </View>
-            <Text
-              style={[
-                styles.logoTitle,
-                { color: isDarkMode ? '#4ADE80' : '#15803D' },
-              ]}
-            >
-              Noklai
-            </Text>
+            <LanguageSelector compact />
           </View>
           <Text
             style={[
@@ -74,7 +80,7 @@ export default function AppLaunchScreen() {
               { color: isDarkMode ? '#CBD5E1' : '#374151' },
             ]}
           >
-            Our Culture. Their Memories. Always With Them.
+            {t('noklai.launch.tagline', 'Our Culture. Their Memories. Always With Them.')}
           </Text>
         </View>
 
@@ -130,7 +136,7 @@ export default function AppLaunchScreen() {
                 { color: isDarkMode ? '#4ADE80' : '#15803D' },
               ]}
             >
-              Culture Connects. Care Continues.
+              {t('noklai.launch.motto', 'Culture Connects. Care Continues.')}
             </Text>
           </View>
 
@@ -140,7 +146,7 @@ export default function AppLaunchScreen() {
               { color: isDarkMode ? '#F8FAFC' : '#111827' },
             ]}
           >
-            Memory & Care Platform
+            {t('noklai.launch.headline', 'Memory & Care Platform')}
           </Text>
           <Text
             style={[
@@ -148,13 +154,13 @@ export default function AppLaunchScreen() {
               { color: isDarkMode ? '#94A3B8' : '#64748B' },
             ]}
           >
-            Culturally familiar memory exercises and continuous daily tracking for elders and caregivers.
+            {t('noklai.launch.subline', 'Culturally familiar memory exercises and continuous daily tracking for elders and caregivers.')}
           </Text>
 
           {/* Primary Action Button */}
           <View style={styles.actionContainer}>
             <NoklaiButton
-              title="Get Started"
+              title={t('noklai.launch.getStarted', 'Get Started')}
               variant="primary"
               size="lg"
               iconRight="arrow-forward"
@@ -176,7 +182,7 @@ export default function AppLaunchScreen() {
               >
                 <Ionicons name="shield-checkmark" size={18} color="#5B409E" />
                 <Text style={[styles.quickRoleText, { color: isDarkMode ? '#E2E8F0' : '#1E293B' }]}>
-                  Caregiver
+                  {t('noklai.launch.caregiver', 'Caregiver')}
                 </Text>
               </TouchableOpacity>
 
@@ -193,7 +199,7 @@ export default function AppLaunchScreen() {
               >
                 <Ionicons name="person" size={18} color="#16A34A" />
                 <Text style={[styles.quickRoleText, { color: isDarkMode ? '#E2E8F0' : '#1E293B' }]}>
-                  Senior / Patient
+                  {t('noklai.launch.patient', 'Senior / Patient')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -212,7 +218,7 @@ export default function AppLaunchScreen() {
                     textDecorationLine: 'underline',
                   }}
                 >
-                  Change Profile Details
+                  {t('noklai.launch.changeDetails', 'Change Profile Details')}
                 </Text>
               </TouchableOpacity>
             )}

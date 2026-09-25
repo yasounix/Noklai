@@ -34,7 +34,7 @@ export default function CaregiverAnalyticsScreen() {
   const noklai = useContext(NoklaiContext);
   const patient = usePatient();
 
-  const patientId = noklai?.activePatientId || patient?.patientId || 'P001';
+  const patientId = noklai?.activePatientId || patient?.patientId ;
   const patientName = noklai?.activePatientName || patient?.patientName;
   const patientAge = noklai?.activePatient?.age || patient?.patientAge;
   const caregiverName = noklai?.caregiverName || patient?.caregiverName;
@@ -140,12 +140,12 @@ export default function CaregiverAnalyticsScreen() {
   // Patient info object for analytics calculations
   const patientInfo = useMemo(() => ({
     patientId,
-    patientName: patientName || t('analytics.defaultPatient', 'Elder Patient'),
-    patientAge: patientAge || '72',
-    caregiverName: caregiverName || t('analytics.defaultCaregiver', 'Family Caregiver'),
+    patientName: patientName || '',
+    patientAge: patientAge || '',
+    caregiverName: caregiverName || '',
     caregiverPhone,
-    relationship: relationship || t('analytics.defaultRel', 'Caregiver'),
-  }), [patientId, patientName, patientAge, caregiverName, caregiverPhone, relationship, t]);
+    relationship: relationship || '',
+  }), [patientId, patientName, patientAge, caregiverName, caregiverPhone, relationship]);
 
   // Load analytics data
   const loadData = useCallback(async () => {
@@ -315,8 +315,63 @@ export default function CaregiverAnalyticsScreen() {
           </Text>
         </View>
 
-        {/* SECTION 1: Cognitive Vitality Index */}
-        <View style={[styles.vitalityCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
+        {/* SECTION CONTENT: Empty State vs Full Analytics */}
+        {!patientId || totalSessions === 0 ? (
+          <View
+            style={[
+              styles.sectionCard,
+              {
+                backgroundColor: theme.cardBackground,
+                borderColor: theme.cardBorder,
+                alignItems: 'center',
+                paddingVertical: 44,
+                paddingHorizontal: 24,
+                marginTop: 8,
+              },
+            ]}
+          >
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                backgroundColor: isDarkMode ? '#1E293B' : '#EFF6FF',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 16,
+              }}
+            >
+              <Ionicons name="analytics-outline" size={32} color="#2563EB" />
+            </View>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: '800',
+                color: theme.text,
+                marginBottom: 8,
+                textAlign: 'center',
+              }}
+            >
+              No gameplay data recorded yet
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                color: theme.subText,
+                textAlign: 'center',
+                lineHeight: 22,
+                maxWidth: 320,
+              }}
+            >
+              {patientInfo.patientName
+                ? `When ${patientInfo.patientName} plays brain exercises, their Cognitive Vitality Index (CVI), accuracy trends, and domain performance will appear here.`
+                : 'When a patient completes brain exercises, their verified Cognitive Vitality Index (CVI) and domain breakdown will appear here.'}
+            </Text>
+          </View>
+        ) : (
+          <>
+            {/* SECTION 1: Cognitive Vitality Index */}
+            <View style={[styles.vitalityCard, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
           <View style={styles.vitalityHeader}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.sectionTitle, { color: theme.text }]}>
@@ -651,6 +706,8 @@ export default function CaregiverAnalyticsScreen() {
             </Text>
           </TouchableOpacity>
         </View>
+          </>
+        )}
 
         <View style={{ height: 40 }} />
       </ScrollView>

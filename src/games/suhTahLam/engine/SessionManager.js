@@ -31,7 +31,7 @@ export class SessionManager {
   /**
    * Starts a new session with an authentic playerId and difficulty
    */
-  startSession({ playerId = 'P001', initialDifficulty = 'easy' } = {}) {
+  startSession({ playerId = null, initialDifficulty = 'easy' } = {}) {
     const now = new Date().toISOString();
     this.totalPausedDurationMs = 0;
     this.isPaused = false;
@@ -100,7 +100,7 @@ export class SessionManager {
   restart({ initialDifficulty } = {}) {
     const previousSession = this.endSession();
     const newSession = this.startSession({
-      playerId: previousSession?.playerId || 'P001',
+      playerId: previousSession?.playerId ,
       initialDifficulty: initialDifficulty || previousSession?.currentDifficulty || 'easy',
     });
 
