@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNoklai } from '../context/NoklaiContext';
 import { noklaiTheme } from '../theme/noklaiTheme';

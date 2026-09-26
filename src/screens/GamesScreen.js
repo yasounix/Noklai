@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import DhopkhelGame from '../games/DhopkhelGame';
 import MemoryStoriesGame from '../games/MemoryStoriesGame';
 import SuhTahLamGame from '../games/suhTahLam';

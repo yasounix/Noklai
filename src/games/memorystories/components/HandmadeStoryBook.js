@@ -21,7 +21,7 @@ import {
   useWindowDimensions,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SoundManager } from '../../../modules/audio/SoundManager';
 
 export function HandmadeStoryBook({

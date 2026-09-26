@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { supabase } from '../../modules/supabaseClient';
 import { AuthService } from '../../services/AuthService';
 import { noklaiTheme } from '../theme/noklaiTheme';

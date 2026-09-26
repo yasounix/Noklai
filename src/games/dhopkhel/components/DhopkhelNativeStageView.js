@@ -35,7 +35,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 // Culturally authentic characters inspired by rural Assam & Karbi Anglong
 const DHOP_CHARACTERS = {

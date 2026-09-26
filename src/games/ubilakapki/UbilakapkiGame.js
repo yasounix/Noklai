@@ -27,7 +27,7 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { NativeStageView } from './components/NativeStageView.js';
 import { PauseMenu } from './components/PauseMenu.js';
 import { SessionManager } from './engine/SessionManager.js';
