@@ -10,12 +10,19 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.curiouscandy64.noklai",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -23,6 +30,12 @@
     "plugins": [
       "expo-audio",
       "expo-localization"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e56e9347-2785-4382-b196-69eab4557d41"
+      }
+    },
+    "owner": "curiouscandy64"
   }
 }
